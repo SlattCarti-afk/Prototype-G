@@ -111,24 +111,20 @@ export default function App() {
         <View style={styles.header}>
           <Text style={styles.headerText}>TGift</Text>
         </View>
-        
         <View style={styles.content}>
           <Text style={styles.mainText}>TGift is running and monitoring gifts!</Text>
-          
           <TouchableOpacity 
             style={styles.button}
             onPress={schedulePushNotification}
           >
             <Text style={styles.buttonText}>Test Notification</Text>
           </TouchableOpacity>
-
           <TouchableOpacity 
             style={[styles.button, styles.secondaryButton]}
             onPress={connectToBackend}
           >
             <Text style={styles.buttonText}>Connect to Backend</Text>
           </TouchableOpacity>
-
           {expoPushToken && (
             <View style={styles.tokenContainer}>
               <Text style={styles.tokenLabel}>Push Token:</Text>
