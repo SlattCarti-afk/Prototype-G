@@ -73,10 +73,15 @@ export default function App() {
       }
       
       try {
+        // For web development, we'll use a development token
+        if (Platform.OS === 'web') {
+          console.warn('Push notifications not supported in web preview. Use mobile device for full functionality.');
+          return 'web-dev-token';
+        }
+        
         const projectId = Constants.expoConfig?.extra?.eas?.projectId;
         if (!projectId || projectId === 'your-project-id-here') {
           console.warn('No project ID configured. Using local development mode.');
-          // For development, we'll skip the push token generation
           return 'dev-token-local';
         }
         
@@ -173,7 +178,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     minWidth: 200,
     alignItems: 'center',
-    boxShadow: '0px 2px 3.84px rgba(242, 120, 211, 0.25)',
     elevation: 5,
   },
   secondaryButton: {
