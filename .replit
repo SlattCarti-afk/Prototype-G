@@ -9,12 +9,12 @@ requiredFiles = [".replit", "replit.nix", "package.json", "package-lock.json"]
 channel = "stable-24_11"
 
 [deployment]
-run = ["node", "index.js"]
+run = ["npx", "expo", "start", "--web"]
 deploymentTarget = "autoscale"
 ignorePorts = false
 
 [workflows]
-runButton = "Start Expo"
+runButton = "Start Web"
 
 [[workflows.workflow]]
 name = "Start Expo"
@@ -34,6 +34,19 @@ mode = "sequential"
 task = "shell.exec"
 args = "npx expo start --clear"
 
+[[workflows.workflow]]
+name = "Start Web"
+author = 44858890
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx expo start --web"
+
+[[ports]]
+localPort = 19006
+externalPort = 80
+
 [[ports]]
 localPort = 8081
-externalPort = 80
+externalPort = 8081
