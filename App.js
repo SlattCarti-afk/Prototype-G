@@ -71,12 +71,24 @@ export default function App() {
         alert('Failed to get push token for push notification!');
         return;
       }
-      token = (await Notifications.getExpoPushTokenAsync({
-        projectId: Constants.expoConfig.extra.eas.projectId,
-      })).data;
-      console.log(token);
+      
+      try {
+        const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+        if (!projectId) {
+          console.warn('No project ID found. Push notifications may not work properly.');
+          return;
+        }
+        
+        token = (await Notifications.getExpoPushTokenAsync({
+          projectId: projectId,
+        })).data;
+        console.log('Push token:', token);
+      } catch (error) {
+        console.error('Error getting push token:', error);
+        alert('Error setting up push notifications');
+      }
     } else {
-      alert('Must use physical device for Push Notifications');
+      console.warn('Must use physical device for Push Notifications');
     }
 
     return token;

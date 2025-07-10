@@ -25,6 +25,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "npx expo start"
 
+[[workflows.workflow]]
+name = "Start Expo Dev"
+author = 44858890
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx expo start --clear"
+
 [[ports]]
 localPort = 8081
 externalPort = 80
