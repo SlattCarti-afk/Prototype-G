@@ -41,7 +41,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx expo start --web"
+args = "npx expo start --web --host 0.0.0.0"
 
 [[ports]]
 localPort = 8081
