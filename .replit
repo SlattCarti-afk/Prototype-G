@@ -24,3 +24,7 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npx expo start"
+
+[[ports]]
+localPort = 8081
+externalPort = 80
