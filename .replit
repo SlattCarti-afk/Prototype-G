@@ -12,3 +12,15 @@ channel = "stable-24_11"
 run = ["node", "index.js"]
 deploymentTarget = "autoscale"
 ignorePorts = false
+
+[workflows]
+runButton = "Start Expo"
+
+[[workflows.workflow]]
+name = "Start Expo"
+author = 44858890
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx expo start"
