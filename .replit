@@ -44,9 +44,5 @@ task = "shell.exec"
 args = "npx expo start --web"
 
 [[ports]]
-localPort = 19006
-externalPort = 80
-
-[[ports]]
 localPort = 8081
-externalPort = 8081
+externalPort = 80
