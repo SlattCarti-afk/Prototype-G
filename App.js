@@ -72,14 +72,27 @@ export default function App() {
 
   const checkBackendStatus = async () => {
     try {
-      const response = await fetch(`${BACKEND_BASE_URL}/status`);
+      console.log('Checking backend status at:', `${BACKEND_BASE_URL}/status`);
+      const response = await fetch(`${BACKEND_BASE_URL}/status`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log('Status response:', response.status, response.statusText);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Status data:', data);
         setIsConnected(true);
         setBackendStatus(`Connected - Client: ${data.telegram_connected ? 'Online' : 'Offline'}`);
       } else {
+        const errorText = await response.text();
+        console.log('Status error response:', errorText);
         setIsConnected(false);
-        setBackendStatus('Backend Error');
+        setBackendStatus(`Backend Error (${response.status})`);
       }
     } catch (error) {
       setIsConnected(false);
@@ -140,9 +153,12 @@ export default function App() {
       });
 
       if (response.ok) {
-        Alert.alert('✅ Success', 'Test notification sent to backend!');
-        // Fetch notifications immediately after sending
-        setTimeout(fetchNotifications, 1000);
+        Alert.alert('✅ Success', 'Test notification sent to backend! Check the backend logs to confirm receipt.');
+        // Also try to refresh the backend status
+        setTimeout(() => {
+          checkBackendStatus();
+          fetchNotifications();
+        }, 1000);
       } else {
         const errorData = await response.json();
         Alert.alert('❌ Error', `Failed to send: ${errorData.detail || 'Unknown error'}`);
