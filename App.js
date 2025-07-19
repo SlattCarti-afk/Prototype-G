@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator, Animated } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator, Animated, FlatList } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
+
+const BACKEND_BASE_URL = 'https://8ee58e81-aaf6-4f97-8977-e5e3dab7598b-00-2akwa9443cie2.pike.replit.dev';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -19,9 +21,13 @@ export default function App() {
   const [notification, setNotification] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [backendStatus, setBackendStatus] = useState('Checking...');
+  const [notifications, setNotifications] = useState([]);
+  const [isPolling, setIsPolling] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const pollInterval = useRef(null);
 
   useEffect(() => {
     // Animate in
@@ -31,16 +37,20 @@ export default function App() {
       useNativeDriver: true,
     }).start();
 
+    // Check backend status
+    checkBackendStatus();
+
+    // Start polling for notifications
+    startPolling();
+
     // Simplified token registration to reduce loading time
     registerForPushNotificationsAsync()
       .then(token => {
         setExpoPushToken(token);
-        setIsConnected(true);
       })
       .catch(() => {
         console.log('Failed to get push token');
         setExpoPushToken('dev-mode');
-        setIsConnected(false);
       });
 
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
@@ -54,8 +64,95 @@ export default function App() {
     return () => {
       Notifications.removeNotificationSubscription(notificationListener.current);
       Notifications.removeNotificationSubscription(responseListener.current);
+      if (pollInterval.current) {
+        clearInterval(pollInterval.current);
+      }
     };
   }, []);
+
+  const checkBackendStatus = async () => {
+    try {
+      const response = await fetch(`${BACKEND_BASE_URL}/status`);
+      if (response.ok) {
+        const data = await response.json();
+        setIsConnected(true);
+        setBackendStatus(`Connected - Client: ${data.telegram_connected ? 'Online' : 'Offline'}`);
+      } else {
+        setIsConnected(false);
+        setBackendStatus('Backend Error');
+      }
+    } catch (error) {
+      setIsConnected(false);
+      setBackendStatus('Connection Failed');
+      console.error('Backend status check failed:', error);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch(`${BACKEND_BASE_URL}/notifications`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.notifications && data.notifications.length > 0) {
+          setNotifications(prev => {
+            // Add new notifications and remove duplicates
+            const combined = [...data.notifications, ...prev];
+            const unique = combined.filter((item, index, self) => 
+              index === self.findIndex(t => t.timestamp === item.timestamp && t.message === item.message)
+            );
+            return unique.slice(0, 50); // Keep only last 50 notifications
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  };
+
+  const startPolling = () => {
+    if (pollInterval.current) {
+      clearInterval(pollInterval.current);
+    }
+    
+    setIsPolling(true);
+    fetchNotifications(); // Initial fetch
+    
+    pollInterval.current = setInterval(() => {
+      fetchNotifications();
+    }, 4000); // Poll every 4 seconds
+  };
+
+  const sendTestNotification = async () => {
+    setIsLoading(true);
+    try {
+      const testData = {
+        message: "🧪 Test notification from TGift app!",
+        channel_id: "-1002417640134",
+        timestamp: new Date().toISOString()
+      };
+
+      const response = await fetch(`${BACKEND_BASE_URL}/notify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(testData)
+      });
+
+      if (response.ok) {
+        Alert.alert('✅ Success', 'Test notification sent to backend!');
+        // Fetch notifications immediately after sending
+        setTimeout(fetchNotifications, 1000);
+      } else {
+        const errorData = await response.json();
+        Alert.alert('❌ Error', `Failed to send: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      Alert.alert('❌ Network Error', 'Could not connect to backend');
+      console.error('Test notification error:', error);
+    }
+    setIsLoading(false);
+  };
 
   async function schedulePushNotification() {
     setIsLoading(true);
@@ -71,7 +168,7 @@ export default function App() {
       
       // Show success feedback
       setTimeout(() => {
-        Alert.alert('🎉 Success', 'Test notification sent!', [
+        Alert.alert('🎉 Success', 'Local test notification sent!', [
           { text: 'Great!', style: 'default' }
         ]);
       }, 1200);
@@ -127,26 +224,24 @@ export default function App() {
 
   const connectToBackend = async () => {
     setIsLoading(true);
-    
-    // Simulate connection process
-    setTimeout(() => {
-      setIsLoading(false);
-      Alert.alert(
-        '🚀 Backend Ready', 
-        'Your TGift service is ready to connect to your backend infrastructure for real-time gift monitoring!',
-        [
-          { text: 'Configure Later', style: 'cancel' },
-          { text: 'Setup Now', style: 'default' }
-        ]
-      );
-    }, 1500);
+    await checkBackendStatus();
+    setIsLoading(false);
   };
 
   const StatusIndicator = ({ connected }) => (
     <View style={[styles.statusIndicator, connected ? styles.statusConnected : styles.statusDisconnected]}>
       <View style={[styles.statusDot, connected ? styles.dotConnected : styles.dotDisconnected]} />
       <Text style={styles.statusText}>
-        {connected ? 'Connected' : 'Local Mode'}
+        {connected ? 'Connected' : 'Disconnected'}
+      </Text>
+    </View>
+  );
+
+  const renderNotificationItem = ({ item, index }) => (
+    <View style={styles.notificationItem}>
+      <Text style={styles.notificationMessage}>{item.message}</Text>
+      <Text style={styles.notificationTimestamp}>
+        {new Date(item.timestamp).toLocaleString()}
       </Text>
     </View>
   );
@@ -161,7 +256,7 @@ export default function App() {
               <Text style={styles.headerTitle}>TGift</Text>
               <StatusIndicator connected={isConnected} />
             </View>
-            <Text style={styles.headerSubtitle}>Gift Monitoring & Alerts</Text>
+            <Text style={styles.headerSubtitle}>{backendStatus}</Text>
           </View>
 
           {/* Main Content */}
@@ -172,20 +267,20 @@ export default function App() {
                 <Text style={styles.cardTitle}>🎁 Service Status</Text>
               </View>
               <Text style={styles.cardDescription}>
-                TGift is actively monitoring for new gifts and ready to send instant notifications.
+                {isPolling ? 'Monitoring for new notifications...' : 'Notification monitoring paused'}
               </Text>
               <View style={styles.metricsRow}>
                 <View style={styles.metric}>
-                  <Text style={styles.metricValue}>✓</Text>
-                  <Text style={styles.metricLabel}>Active</Text>
+                  <Text style={styles.metricValue}>{isConnected ? '✓' : '✗'}</Text>
+                  <Text style={styles.metricLabel}>Backend</Text>
                 </View>
                 <View style={styles.metric}>
-                  <Text style={styles.metricValue}>0ms</Text>
-                  <Text style={styles.metricLabel}>Latency</Text>
+                  <Text style={styles.metricValue}>{notifications.length}</Text>
+                  <Text style={styles.metricLabel}>Messages</Text>
                 </View>
                 <View style={styles.metric}>
-                  <Text style={styles.metricValue}>24/7</Text>
-                  <Text style={styles.metricLabel}>Uptime</Text>
+                  <Text style={styles.metricValue}>{isPolling ? '🟢' : '🔴'}</Text>
+                  <Text style={styles.metricLabel}>Polling</Text>
                 </View>
               </View>
             </View>
@@ -194,7 +289,7 @@ export default function App() {
             <View style={styles.buttonContainer}>
               <TouchableOpacity 
                 style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
-                onPress={schedulePushNotification}
+                onPress={sendTestNotification}
                 disabled={isLoading}
                 activeOpacity={0.8}
               >
@@ -202,8 +297,8 @@ export default function App() {
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
                   <>
-                    <Text style={styles.primaryButtonIcon}>🔔</Text>
-                    <Text style={styles.primaryButtonText}>Test Notification</Text>
+                    <Text style={styles.primaryButtonIcon}>🧪</Text>
+                    <Text style={styles.primaryButtonText}>Send Test Notification</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -218,11 +313,31 @@ export default function App() {
                   <ActivityIndicator color="#7289DA" size="small" />
                 ) : (
                   <>
-                    <Text style={styles.secondaryButtonIcon}>⚡</Text>
-                    <Text style={styles.secondaryButtonText}>Connect Backend</Text>
+                    <Text style={styles.secondaryButtonIcon}>🔄</Text>
+                    <Text style={styles.secondaryButtonText}>Refresh Status</Text>
                   </>
                 )}
               </TouchableOpacity>
+            </View>
+
+            {/* Notifications List */}
+            <View style={styles.notificationsCard}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>📨 Recent Notifications</Text>
+              </View>
+              {notifications.length > 0 ? (
+                <FlatList
+                  data={notifications}
+                  renderItem={renderNotificationItem}
+                  keyExtractor={(item, index) => `${item.timestamp}-${index}`}
+                  style={styles.notificationsList}
+                  showsVerticalScrollIndicator={false}
+                />
+              ) : (
+                <Text style={styles.emptyNotifications}>
+                  No notifications yet. Send a test notification to get started!
+                </Text>
+              )}
             </View>
 
             {/* Token Information */}
@@ -413,6 +528,47 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: '#7289DA',
+  },
+  notificationsCard: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+    maxHeight: 300,
+  },
+  notificationsList: {
+    maxHeight: 200,
+  },
+  notificationItem: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#7289DA',
+  },
+  notificationMessage: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  notificationTimestamp: {
+    fontSize: 12,
+    color: '#A0A0A0',
+    fontWeight: '400',
+  },
+  emptyNotifications: {
+    fontSize: 16,
+    color: '#A0A0A0',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    paddingVertical: 20,
   },
   tokenCard: {
     backgroundColor: '#1E1E1E',
