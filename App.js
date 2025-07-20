@@ -228,13 +228,16 @@ export default function App() {
 
     setIsPolling(true);
     fetchNotifications(); // Initial fetch
+    checkBackendStatus(); // Initial status check
     setCountdown(5);
 
-    // Countdown timer that updates every second and fetches data when it reaches 0
+    // Countdown timer that updates every second and refreshes everything when it reaches 0
     countdownInterval.current = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
-          fetchNotifications(); // Actually fetch data when countdown reaches 0
+          // Do the same job as the refresh button
+          fetchNotifications();
+          checkBackendStatus();
           return 5; // Reset to 5
         }
         return prev - 1;
@@ -413,8 +416,13 @@ export default function App() {
   const renderNotificationItem = ({ item, index }) => {
     const isExpanded = expandedNotifications.has(index);
     const headline = item.headline || "🎁 New Gift Alert";
-    // Clean the message by removing standalone "news" text but preserve formatting
-    const message = (item.message || "").replace(/^\s*news\s*$/gmi, '').trim();
+    // Clean the message by removing standalone "news" text and "— NEWS" patterns
+    let message = (item.message || "")
+      .replace(/^\s*news\s*$/gmi, '') // Remove standalone "news" lines
+      .replace(/^—\s*NEWS\s*$/gmi, '') // Remove "— NEWS" lines  
+      .replace(/\n\s*news\s*\n/gi, '\n') // Remove "news" between newlines
+      .replace(/\n\s*—\s*NEWS\s*\n/gi, '\n') // Remove "— NEWS" between newlines
+      .trim();
     const shouldShowReadMore = message.length > 100;
     const displayMessage = !isExpanded && shouldShowReadMore ? message.substring(0, 100) : message;
 
