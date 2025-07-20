@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Text, View, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator, Animated, FlatList, Linking } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -50,6 +49,7 @@ export default function App() {
     registerForPushNotificationsAsync()
       .then(token => {
         setExpoPushToken(token);
+        registerDeviceWithBackend(token); // Register with backend
       })
       .catch(() => {
         console.log('Failed to get push token');
@@ -83,9 +83,9 @@ export default function App() {
           'Content-Type': 'application/json',
         },
       });
-      
+
       console.log('Status response:', response.status, response.statusText);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('Status data:', data);
@@ -129,10 +129,10 @@ export default function App() {
     if (pollInterval.current) {
       clearInterval(pollInterval.current);
     }
-    
+
     setIsPolling(true);
     fetchNotifications(); // Initial fetch
-    
+
     pollInterval.current = setInterval(() => {
       fetchNotifications();
     }, 4000); // Poll every 4 seconds
@@ -158,28 +158,28 @@ export default function App() {
 
       if (response.ok) {
         Alert.alert('✅ Success', 'Test notification sent to backend! You should receive a push notification shortly.');
-        
+
         // Schedule a local push notification to simulate backend response
-        setTimeout(async () => {
-          try {
-            await Notifications.scheduleNotificationAsync({
-              content: {
-                title: "🎁 TGift Alert",
-                body: "Test notification received from backend! Your gift monitoring system is working.",
-                data: { 
-                  type: 'backend_test_response',
-                  timestamp: new Date().toISOString()
-                },
-                sound: true,
-                priority: Notifications.AndroidImportance.HIGH,
-              },
-              trigger: { seconds: 2 },
-            });
-          } catch (error) {
-            console.error('Failed to schedule response notification:', error);
-          }
-        }, 500);
-        
+        // setTimeout(async () => {
+        //   try {
+        //     await Notifications.scheduleNotificationAsync({
+        //       content: {
+        //         title: "🎁 TGift Alert",
+        //         body: "Test notification received from backend! Your gift monitoring system is working.",
+        //         data: { 
+        //           type: 'backend_test_response',
+        //           timestamp: new Date().toISOString()
+        //         },
+        //         sound: true,
+        //         priority: Notifications.AndroidImportance.HIGH,
+        //       },
+        //       trigger: { seconds: 2 },
+        //     });
+        //   } catch (error) {
+        //     console.error('Failed to schedule response notification:', error);
+        //   }
+        // }, 500);
+
         // Also try to refresh the backend status
         setTimeout(() => {
           checkBackendStatus();
@@ -196,6 +196,33 @@ export default function App() {
     setIsLoading(false);
   };
 
+  const registerDeviceWithBackend = async (pushToken) => {
+    try {
+      if (pushToken && !pushToken.includes('dev') && !pushToken.includes('simulator') && !pushToken.includes('web')) {
+        const response = await fetch(`${BACKEND_BASE_URL}/register-device`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            expo_push_token: pushToken,
+            device_id: Device.modelName || 'unknown-device'
+          })
+        });
+
+        if (response.ok) {
+          console.log('✅ Device successfully registered with backend for push notifications');
+        } else {
+          console.log('⚠️ Failed to register device with backend:', response.status);
+        }
+      } else {
+        console.log('⚠️ Skipping backend registration - development mode token');
+      }
+    } catch (error) {
+      console.error('❌ Error registering device with backend:', error);
+    }
+  };
+
   async function schedulePushNotification() {
     setIsLoading(true);
     try {
@@ -207,7 +234,7 @@ export default function App() {
         },
         trigger: { seconds: 1 },
       });
-      
+
       // Show success feedback
       setTimeout(() => {
         Alert.alert('🎉 Success', 'Local test notification sent!', [
@@ -233,12 +260,12 @@ export default function App() {
     try {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
-      
+
       if (existingStatus !== 'granted') {
         const { status } = await Notifications.requestPermissionsAsync();
         finalStatus = status;
       }
-      
+
       if (finalStatus !== 'granted') {
         return 'no-permissions';
       }
