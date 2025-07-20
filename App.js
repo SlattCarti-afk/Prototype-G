@@ -489,7 +489,7 @@ export default function App() {
             <View style={styles.header}>
               <View style={styles.headerTop}>
                 <View style={styles.headerTitleContainer}>
-                  <Ionicons name="gift" size={28} color="#8088fc" style={styles.headerIcon} />
+                  <Ionicons name="gift" size={22} color="#8088fc" style={styles.headerIcon} />
                   <Text style={styles.headerTitle}>TGift</Text>
                 </View>
                 <StatusIndicator connected={isConnected} />
@@ -631,9 +631,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
     backgroundColor: 'rgba(21, 21, 21, 0.95)',
     backdropFilter: 'blur(10px)',
     borderBottomWidth: 1,
@@ -643,17 +643,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   headerTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   headerIcon: {
-    marginRight: 12,
+    marginRight: 8,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '900',
     color: '#FFFFFF',
     letterSpacing: -1,
@@ -663,15 +663,15 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#B0B0B0',
     fontWeight: '600',
-    marginBottom: 3,
+    marginBottom: 2,
     letterSpacing: 0.5,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   connectionStatus: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#D0D0D0',
     fontWeight: '500',
     letterSpacing: 0.3,
