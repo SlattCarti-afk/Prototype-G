@@ -22,13 +22,13 @@ Notifications.setNotificationHandler({
 export default function App() {
   const [expoPushToken, setExpoPushToken] = useState('');
   const [notification, setNotification] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [testButtonLoading, setTestButtonLoading] = useState(false);
+  const [refreshButtonLoading, setRefreshButtonLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [backendStatus, setBackendStatus] = useState('Checking...');
   const [notifications, setNotifications] = useState([]);
   const [isPolling, setIsPolling] = useState(false);
   const [expandedNotifications, setExpandedNotifications] = useState(new Set());
-  const [lastFetchTime, setLastFetchTime] = useState(null);
   const [countdown, setCountdown] = useState(5);
   const notificationListener = useRef();
   const responseListener = useRef();
@@ -93,12 +93,16 @@ export default function App() {
       // In a real app, you'd use AsyncStorage, but for web we'll use localStorage
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const cached = window.localStorage.getItem('tgift_notifications');
-        const cachedTime = window.localStorage.getItem('tgift_last_fetch');
         if (cached) {
-          setNotifications(JSON.parse(cached));
-        }
-        if (cachedTime) {
-          setLastFetchTime(new Date(cachedTime));
+          const parsedNotifications = JSON.parse(cached);
+          // Remove duplicates when loading
+          const uniqueNotifications = parsedNotifications.filter((notification, index, self) =>
+            index === self.findIndex((n) => 
+              n.timestamp === notification.timestamp && 
+              n.message === notification.message
+            )
+          );
+          setNotifications(uniqueNotifications);
         }
       }
     } catch (error) {
@@ -110,7 +114,6 @@ export default function App() {
     try {
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         window.localStorage.setItem('tgift_notifications', JSON.stringify(newNotifications));
-        window.localStorage.setItem('tgift_last_fetch', new Date().toISOString());
       }
     } catch (error) {
       console.log('Failed to cache notifications:', error);
@@ -154,22 +157,20 @@ export default function App() {
       if (response.ok) {
         const data = await response.json();
         if (data.notifications && data.notifications.length > 0) {
-          // Remove duplicates based on timestamp and message
+          // Remove duplicates based on timestamp and message content
           const uniqueNotifications = data.notifications.filter((notification, index, self) =>
             index === self.findIndex((n) => 
-              n.timestamp === notification.timestamp && n.message === notification.message
+              n.timestamp === notification.timestamp && 
+              n.message === notification.message &&
+              n.headline === notification.headline
             )
           );
           setNotifications(uniqueNotifications);
-          setLastFetchTime(new Date());
           cacheNotifications(uniqueNotifications);
         }
       }
-      // Reset countdown after fetch
-      setCountdown(5);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
-      setCountdown(5);
     }
   };
 
@@ -185,20 +186,16 @@ export default function App() {
     fetchNotifications(); // Initial fetch
     setCountdown(5);
 
-    // Countdown timer that updates every second
+    // Countdown timer that updates every second and fetches data when it reaches 0
     countdownInterval.current = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
-          return 5; // Reset to 5 when it reaches 0
+          fetchNotifications(); // Actually fetch data when countdown reaches 0
+          return 5; // Reset to 5
         }
         return prev - 1;
       });
     }, 1000);
-
-    // Fetch notifications every 5 seconds
-    pollInterval.current = setInterval(() => {
-      fetchNotifications();
-    }, 5000);
   };
 
   const playNotificationSound = async () => {
@@ -220,8 +217,8 @@ export default function App() {
   };
 
   const sendTestNotification = async () => {
-    if (isLoading) return; // Prevent double clicks
-    setIsLoading(true);
+    if (testButtonLoading) return; // Prevent double clicks
+    setTestButtonLoading(true);
     try {
       const testData = {
         headline: "🧪 Test Notification",
@@ -254,7 +251,7 @@ export default function App() {
       Alert.alert('❌ Network Error', 'Could not connect to backend');
       console.error('Test notification error:', error);
     }
-    setIsLoading(false);
+    setTestButtonLoading(false);
   };
 
   const registerDeviceWithBackend = async (pushToken) => {
@@ -285,8 +282,8 @@ export default function App() {
   };
 
   const refreshConnection = async () => {
-    if (isLoading) return; // Prevent double clicks
-    setIsLoading(true);
+    if (refreshButtonLoading) return; // Prevent double clicks
+    setRefreshButtonLoading(true);
     try {
       // Check backend status
       await checkBackendStatus();
@@ -297,7 +294,7 @@ export default function App() {
     } catch (error) {
       Alert.alert('❌ Error', 'Failed to refresh connection');
     }
-    setIsLoading(false);
+    setRefreshButtonLoading(false);
   };
 
   async function registerForPushNotificationsAsync() {
@@ -372,7 +369,8 @@ export default function App() {
   const renderNotificationItem = ({ item, index }) => {
     const isExpanded = expandedNotifications.has(index);
     const headline = item.headline || "🎁 New Gift Alert";
-    const message = item.message || "";
+    // Clean the message by removing standalone "news" text and extra whitespace
+    const message = (item.message || "").replace(/^\s*news\s*$/gmi, '').replace(/\s+/g, ' ').trim();
     const shouldShowReadMore = message.length > 100;
     const displayMessage = !isExpanded && shouldShowReadMore ? message.substring(0, 100) : message;
 
@@ -438,16 +436,8 @@ export default function App() {
                 </Text>
                 <View style={styles.statusInfo}>
                   <Text style={styles.statusInfoText}>
-                    🔄 Auto-refresh: Every 5 seconds
-                  </Text>
-                  <Text style={styles.statusInfoText}>
                     ⏰ Next refresh in: {countdown} seconds
                   </Text>
-                  {lastFetchTime && (
-                    <Text style={styles.statusInfoText}>
-                      🕐 Last update: {lastFetchTime.toLocaleTimeString()}
-                    </Text>
-                  )}
                 </View>
                 <View style={styles.statusPulse}>
                   <View style={[styles.pulseRing, isPolling && styles.pulsing]} />
@@ -461,9 +451,9 @@ export default function App() {
               {/* Action Buttons */}
               <View style={styles.buttonContainer}>
                 <TouchableOpacity 
-                  style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
+                  style={[styles.primaryButton, testButtonLoading && styles.buttonDisabled]}
                   onPress={sendTestNotification}
-                  disabled={isLoading}
+                  disabled={testButtonLoading}
                   activeOpacity={0.8}
                 >
                   <LinearGradient
@@ -472,7 +462,7 @@ export default function App() {
                     end={{ x: 1, y: 0 }}
                     style={styles.buttonGradient}
                   >
-                    {isLoading ? (
+                    {testButtonLoading ? (
                       <ActivityIndicator color="#FFFFFF" size="small" />
                     ) : (
                       <>
@@ -484,13 +474,13 @@ export default function App() {
                 </TouchableOpacity>
 
                 <TouchableOpacity 
-                  style={[styles.secondaryButton, isLoading && styles.buttonDisabled]}
+                  style={[styles.secondaryButton, refreshButtonLoading && styles.buttonDisabled]}
                   onPress={refreshConnection}
-                  disabled={isLoading}
+                  disabled={refreshButtonLoading}
                   activeOpacity={0.8}
                 >
                   <View style={styles.secondaryButtonContent}>
-                    {isLoading ? (
+                    {refreshButtonLoading ? (
                       <ActivityIndicator color="#8088fc" size="small" />
                     ) : (
                       <>
