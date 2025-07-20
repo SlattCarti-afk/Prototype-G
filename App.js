@@ -5,6 +5,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Audio } from 'expo-av';
 
 const BACKEND_BASE_URL = 'https://8ee58e81-aaf6-4f97-8977-e5e3dab7598b-00-2akwa9443cie2.pike.replit.dev';
 
@@ -30,6 +31,7 @@ export default function App() {
   const responseListener = useRef();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pollInterval = useRef(null);
+  const [sound, setSound] = useState();
 
   useEffect(() => {
     // Animate in
@@ -69,6 +71,9 @@ export default function App() {
       Notifications.removeNotificationSubscription(responseListener.current);
       if (pollInterval.current) {
         clearInterval(pollInterval.current);
+      }
+      if (sound) {
+        sound.unloadAsync();
       }
     };
   }, []);
@@ -138,6 +143,25 @@ export default function App() {
     }, 4000); // Poll every 4 seconds
   };
 
+  const playNotificationSound = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require('./Sound.ogg'),
+        { shouldPlay: true, volume: 0.8 }
+      );
+      setSound(sound);
+      
+      // Unload the sound after playing to free memory
+      setTimeout(async () => {
+        if (sound) {
+          await sound.unloadAsync();
+        }
+      }, 3000);
+    } catch (error) {
+      console.log('Could not play notification sound:', error);
+    }
+  };
+
   const sendTestNotification = async () => {
     setIsLoading(true);
     try {
@@ -157,6 +181,9 @@ export default function App() {
       });
 
       if (response.ok) {
+        // Play notification sound immediately for web browser feedback
+        await playNotificationSound();
+        
         Alert.alert('✅ Success', 'Test notification sent to backend! You should receive a push notification shortly.');
 
         // Schedule a local push notification to simulate backend response
