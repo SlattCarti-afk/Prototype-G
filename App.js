@@ -7,6 +7,7 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Audio } from 'expo-av';
+import { Ionicons } from '@expo/vector-icons';
 
 const BACKEND_BASE_URL = 'https://8ee58e81-aaf6-4f97-8977-e5e3dab7598b-00-2akwa9443cie2.pike.replit.dev';
 
@@ -414,7 +415,7 @@ export default function App() {
   };
 
   const renderNotificationItem = ({ item, index }) => {
-    const headline = item.headline || "🎁 New Gift Alert";
+    const headline = item.headline || "New Gift Alert";
     // Clean the message by removing standalone "news" text and "— NEWS" patterns
     let message = (item.message || "")
       .replace(/^\s*news\s*$/gmi, '') // Remove standalone "news" lines
@@ -428,7 +429,10 @@ export default function App() {
     return (
       <TouchableOpacity style={styles.notificationItem} onPress={openTelegramChannel} activeOpacity={0.7}>
         <View style={styles.notificationCard}>
-          <Text style={styles.notificationHeadline}>{headline}</Text>
+          <View style={styles.notificationHeader}>
+            <Ionicons name="gift" size={16} color="#8088fc" style={styles.notificationIcon} />
+            <Text style={styles.notificationHeadline}>{headline}</Text>
+          </View>
           <View style={styles.messageContainer}>
             <Text style={styles.notificationMessage}>
               {displayMessage}
@@ -467,7 +471,10 @@ export default function App() {
             {/* Header */}
             <View style={styles.header}>
               <View style={styles.headerTop}>
-                <Text style={styles.headerTitle}>🎁 TGift</Text>
+                <View style={styles.headerTitleContainer}>
+                  <Ionicons name="gift" size={28} color="#8088fc" style={styles.headerIcon} />
+                  <Text style={styles.headerTitle}>TGift</Text>
+                </View>
                 <StatusIndicator connected={isConnected} />
               </View>
               <Text style={styles.headerSubtitle}>Gift Detection & Alert System</Text>
@@ -477,17 +484,23 @@ export default function App() {
             {/* Main Content */}
             <View style={styles.mainContent}>
               {/* Status Card */}
-              <View style={styles.card}>
+              <View style={styles.statusCard}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>🔍 Monitoring Status</Text>
+                  <View style={styles.cardTitleContainer}>
+                    <Ionicons name="search" size={18} color="#8088fc" style={styles.cardIcon} />
+                    <Text style={styles.cardTitle}>Monitoring Status</Text>
+                  </View>
                 </View>
                 <Text style={styles.cardDescription}>
                   Actively Monitoring For New Gifts!
                 </Text>
                 <View style={styles.statusInfo}>
-                  <Text style={styles.statusInfoText}>
-                    ⏰ Next refresh in: {countdown} seconds
-                  </Text>
+                  <View style={styles.statusInfoRow}>
+                    <Ionicons name="time" size={14} color="#C0C0C0" style={styles.statusIcon} />
+                    <Text style={styles.statusInfoText}>
+                      Next refresh in: {countdown} seconds
+                    </Text>
+                  </View>
                 </View>
                 <View style={styles.statusPulse}>
                   <View style={[styles.pulseRing, isPolling && styles.pulsing]} />
@@ -517,7 +530,7 @@ export default function App() {
                       <ActivityIndicator color="#FFFFFF" size="small" />
                     ) : (
                       <>
-                        <Text style={styles.primaryButtonIcon}>🧪</Text>
+                        <Ionicons name="flask" size={20} color="#FFFFFF" style={styles.buttonIcon} />
                         <Text style={styles.primaryButtonText}>Send Test Notification</Text>
                       </>
                     )}
@@ -535,7 +548,7 @@ export default function App() {
                       <ActivityIndicator color="#8088fc" size="small" />
                     ) : (
                       <>
-                        <Text style={styles.secondaryButtonIcon}>🔄</Text>
+                        <Ionicons name="refresh" size={20} color="#8088fc" style={styles.buttonIcon} />
                         <Text style={styles.secondaryButtonText}>Refresh</Text>
                       </>
                     )}
@@ -546,7 +559,10 @@ export default function App() {
               {/* Notifications List */}
               <View style={styles.notificationsCard}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>📨 Recent Gift News</Text>
+                  <View style={styles.cardTitleContainer}>
+                    <Ionicons name="mail" size={18} color="#8088fc" style={styles.cardIcon} />
+                    <Text style={styles.cardTitle}>Recent Gift News</Text>
+                  </View>
                   <Text style={styles.notificationCount}>
                     {notifications.length} alerts
                   </Text>
@@ -566,7 +582,7 @@ export default function App() {
                   </View>
                 ) : (
                   <View style={styles.emptyState}>
-                    <Text style={styles.emptyStateIcon}>🎁</Text>
+                    <Ionicons name="gift-outline" size={56} color="#8088fc" style={styles.emptyStateIcon} />
                     <Text style={styles.emptyStateTitle}>No gift news yet</Text>
                     <Text style={styles.emptyStateDescription}>
                       Send a test notification or wait for new gift opportunities to be detected!
@@ -612,6 +628,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIcon: {
+    marginRight: 12,
+  },
   headerTitle: {
     fontSize: 32,
     fontWeight: '900',
@@ -620,6 +643,7 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(128, 136, 252, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   headerSubtitle: {
     fontSize: 16,
@@ -627,12 +651,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 4,
     letterSpacing: 0.5,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   connectionStatus: {
     fontSize: 14,
     color: '#D0D0D0',
     fontWeight: '500',
     letterSpacing: 0.3,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   statusIndicator: {
     flexDirection: 'row',
@@ -694,19 +720,19 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
   },
-  card: {
+  statusCard: {
     backgroundColor: 'rgba(30, 30, 30, 0.8)',
-    borderRadius: 24,
-    padding: 28,
-    marginBottom: 24,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: 'rgba(128, 136, 252, 0.15)',
     backdropFilter: 'blur(20px)',
     shadowColor: 'rgba(128, 136, 252, 0.2)',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 12,
+    shadowRadius: 12,
+    elevation: 10,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -714,14 +740,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  cardTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardIcon: {
+    marginRight: 8,
+  },
   cardTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.5,
     textShadowColor: 'rgba(128, 136, 252, 0.2)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   notificationCount: {
     fontSize: 12,
@@ -738,24 +772,33 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     letterSpacing: 0.5,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   cardDescription: {
-    fontSize: 17,
+    fontSize: 16,
     color: '#E0E0E0',
-    lineHeight: 26,
-    marginBottom: 20,
+    lineHeight: 24,
+    marginBottom: 18,
     fontWeight: '500',
     letterSpacing: 0.2,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   statusInfo: {
-    marginBottom: 24,
+    marginBottom: 20,
+  },
+  statusInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusIcon: {
+    marginRight: 6,
   },
   statusInfoText: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#C0C0C0',
-    marginBottom: 6,
     fontWeight: '500',
     letterSpacing: 0.3,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   statusPulse: {
     alignSelf: 'center',
@@ -802,7 +845,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   buttonContainer: {
-    marginBottom: 28,
+    marginBottom: 24,
+  },
+  buttonIcon: {
+    marginRight: 8,
   },
   primaryButton: {
     borderRadius: 20,
@@ -844,43 +890,37 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.5,
   },
-  primaryButtonIcon: {
-    fontSize: 20,
-    marginRight: 10,
-  },
   primaryButtonText: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.5,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
-  },
-  secondaryButtonIcon: {
-    fontSize: 20,
-    marginRight: 10,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   secondaryButtonText: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
     color: '#8088fc',
     letterSpacing: 0.5,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   notificationsCard: {
     backgroundColor: 'rgba(30, 30, 30, 0.8)',
-    borderRadius: 24,
-    padding: 28,
+    borderRadius: 20,
+    padding: 24,
     marginBottom: 24,
     borderWidth: 1,
     borderColor: 'rgba(128, 136, 252, 0.15)',
     backdropFilter: 'blur(20px)',
-    minHeight: 320,
+    minHeight: 300,
     shadowColor: 'rgba(128, 136, 252, 0.2)',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 12,
+    shadowRadius: 12,
+    elevation: 10,
   },
   notificationsListContainer: {
     flex: 1,
@@ -910,22 +950,32 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(128, 136, 252, 0.1)',
   },
-  notificationHeadline: {
-    fontSize: 17,
-    color: '#FFFFFF',
-    fontWeight: '800',
+  notificationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 10,
+  },
+  notificationIcon: {
+    marginRight: 8,
+  },
+  notificationHeadline: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '700',
     letterSpacing: -0.2,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    flex: 1,
   },
   messageContainer: {
     marginBottom: 10,
   },
   notificationMessage: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#E0E0E0',
     fontWeight: '500',
-    lineHeight: 22,
+    lineHeight: 20,
     letterSpacing: 0.1,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   readMoreButton: {
     marginTop: 6,
@@ -936,46 +986,47 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(128, 136, 252, 0.1)',
   },
   readMoreText: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#8088fc',
     fontWeight: '700',
     letterSpacing: 0.3,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   notificationTimestamp: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#A0A0A0',
     fontWeight: '500',
     letterSpacing: 0.2,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 48,
+    paddingVertical: 40,
   },
   emptyStateIcon: {
-    fontSize: 56,
-    marginBottom: 20,
-    textShadowColor: 'rgba(128, 136, 252, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+    marginBottom: 16,
+    opacity: 0.7,
   },
   emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 12,
+    marginBottom: 10,
     letterSpacing: -0.3,
     textShadowColor: 'rgba(128, 136, 252, 0.2)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   emptyStateDescription: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#B0B0B0',
     textAlign: 'center',
-    lineHeight: 24,
-    maxWidth: 300,
+    lineHeight: 22,
+    maxWidth: 280,
     fontWeight: '500',
     letterSpacing: 0.2,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
 });
