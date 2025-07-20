@@ -141,9 +141,10 @@ export default function App() {
     setIsLoading(true);
     try {
       const testData = {
-        message: "🧪 Test notification from TGift app!",
-        channel_id: "-1002417640134",
-        timestamp: new Date().toISOString()
+        headline: "🧪 Test Notification",
+        message: "Test notification from TGift app! This is working correctly.",
+        timestamp: new Date().toISOString(),
+        channel_id: "-1002417640134"
       };
 
       const response = await fetch(`${BACKEND_BASE_URL}/notify`, {
