@@ -682,9 +682,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 1,
     borderColor: '#2A2A2A',
+    flex: 1,
     maxHeight: 400,
   },
   notificationsList: {
+    flex: 1,
     maxHeight: 300,
   },
   notificationItem: {
