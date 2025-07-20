@@ -414,7 +414,6 @@ export default function App() {
   };
 
   const renderNotificationItem = ({ item, index }) => {
-    const isExpanded = expandedNotifications.has(index);
     const headline = item.headline || "🎁 New Gift Alert";
     // Clean the message by removing standalone "news" text and "— NEWS" patterns
     let message = (item.message || "")
@@ -424,7 +423,7 @@ export default function App() {
       .replace(/\n\s*—\s*NEWS\s*\n/gi, '\n') // Remove "— NEWS" between newlines
       .trim();
     const shouldShowReadMore = message.length > 100;
-    const displayMessage = !isExpanded && shouldShowReadMore ? message.substring(0, 100) : message;
+    const displayMessage = shouldShowReadMore ? message.substring(0, 100) + '...' : message;
 
     return (
       <TouchableOpacity style={styles.notificationItem} onPress={openTelegramChannel} activeOpacity={0.7}>
@@ -433,18 +432,17 @@ export default function App() {
           <View style={styles.messageContainer}>
             <Text style={styles.notificationMessage}>
               {displayMessage}
-              {shouldShowReadMore && !isExpanded && '...'}
             </Text>
             {shouldShowReadMore && (
               <TouchableOpacity 
                 style={styles.readMoreButton}
                 onPress={(e) => {
                   e.stopPropagation();
-                  toggleNotificationExpansion(index);
+                  openTelegramChannel();
                 }}
               >
                 <Text style={styles.readMoreText}>
-                  {isExpanded ? 'Show less' : 'Read more'}
+                  Read more
                 </Text>
               </TouchableOpacity>
             )}
