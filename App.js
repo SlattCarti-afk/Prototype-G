@@ -41,13 +41,13 @@ const PulsingDot = () => {
     const pulse = () => {
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.3,
-          duration: 800,
+          toValue: 1.4,
+          duration: 1200,
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 800,
+          duration: 1200,
           useNativeDriver: true,
         }),
       ]).start(() => pulse());
@@ -59,19 +59,19 @@ const PulsingDot = () => {
     <Animated.View
       style={[
         {
-          width: 20,
-          height: 20,
-          borderRadius: 10,
+          width: 24,
+          height: 24,
+          borderRadius: 12,
           transform: [{ scale: pulseAnim }],
         }
       ]}
     >
       <LinearGradient
-        colors={['#4CAF50', '#66BB6A', '#81C784']}
+        colors={['#00D4AA', '#4ECDC4', '#7FDBDA']}
         style={{
-          width: 20,
-          height: 20,
-          borderRadius: 10,
+          width: 24,
+          height: 24,
+          borderRadius: 12,
         }}
       />
     </Animated.View>
@@ -112,7 +112,7 @@ export default function App() {
     // Animate in
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 800,
+      duration: 1000,
       useNativeDriver: true,
     }).start();
 
@@ -448,7 +448,7 @@ export default function App() {
       <View style={styles.notificationItem}>
         <View style={styles.notificationCard}>
           <View style={styles.notificationHeader}>
-            <Ionicons name="gift" size={16} color="#8088fc" style={styles.notificationIcon} />
+            <Ionicons name="gift" size={18} color="#7B68EE" style={styles.notificationIcon} />
             <Text style={styles.notificationHeadline}>{headline}</Text>
           </View>
           <View style={styles.messageContainer}>
@@ -470,7 +470,7 @@ export default function App() {
                 style={styles.viewChannelButton}
                 onPress={openTelegramChannel}
               >
-                <Ionicons name="arrow-forward" size={12} color="#8088fc" style={styles.viewChannelIcon} />
+                <Ionicons name="arrow-forward" size={12} color="#7B68EE" style={styles.viewChannelIcon} />
                 <Text style={styles.viewChannelText}>
                   View Channel
                 </Text>
@@ -498,7 +498,7 @@ export default function App() {
             <View style={styles.header}>
               <View style={styles.headerTop}>
                 <View style={styles.headerTitleContainer}>
-                  <Ionicons name="gift" size={22} color="#8088fc" style={styles.headerIcon} />
+                  <Ionicons name="gift" size={26} color="#7B68EE" style={styles.headerIcon} />
                   <Text style={styles.headerTitle}>TGift</Text>
                 </View>
                 <StatusIndicator connected={isConnected} />
@@ -513,7 +513,7 @@ export default function App() {
               <View style={styles.statusCard}>
                 <View style={styles.cardHeader}>
                   <View style={styles.cardTitleContainer}>
-                    <Ionicons name="search" size={18} color="#8088fc" style={styles.cardIcon} />
+                    <Ionicons name="search" size={20} color="#7B68EE" style={styles.cardIcon} />
                     <Text style={styles.cardTitle}>Monitoring Status</Text>
                   </View>
                 </View>
@@ -522,7 +522,7 @@ export default function App() {
                 </Text>
                 <View style={styles.statusInfo}>
                   <View style={styles.statusInfoRow}>
-                    <Ionicons name="time" size={14} color="#C0C0C0" style={styles.statusIcon} />
+                    <Ionicons name="time" size={16} color="#A8A8B3" style={styles.statusIcon} />
                     <Text style={styles.statusInfoText}>
                       Next refresh in: {countdown} seconds
                     </Text>
@@ -547,16 +547,16 @@ export default function App() {
                   activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={['#8088fc', '#b1ecfd']}
+                    colors={['#7B68EE', '#9F8AE8', '#C4A8F0']}
                     start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={styles.buttonGradient}
                   >
                     {testButtonLoading ? (
                       <ActivityIndicator color="#FFFFFF" size="small" />
                     ) : (
                       <>
-                        <Ionicons name="flask" size={20} color="#FFFFFF" style={styles.buttonIcon} />
+                        <Ionicons name="flask" size={22} color="#FFFFFF" style={styles.buttonIcon} />
                         <Text style={styles.primaryButtonText}>Send Test Notification</Text>
                       </>
                     )}
@@ -571,10 +571,10 @@ export default function App() {
                 >
                   <View style={styles.secondaryButtonContent}>
                     {refreshButtonLoading ? (
-                      <ActivityIndicator color="#8088fc" size="small" />
+                      <ActivityIndicator color="#7B68EE" size="small" />
                     ) : (
                       <>
-                        <Ionicons name="refresh" size={20} color="#8088fc" style={styles.buttonIcon} />
+                        <Ionicons name="refresh" size={22} color="#7B68EE" style={styles.buttonIcon} />
                         <Text style={styles.secondaryButtonText}>Refresh</Text>
                       </>
                     )}
@@ -586,7 +586,7 @@ export default function App() {
               <View style={styles.notificationsCard}>
                 <View style={styles.cardHeader}>
                   <View style={styles.cardTitleContainer}>
-                    <Ionicons name="mail" size={18} color="#8088fc" style={styles.cardIcon} />
+                    <Ionicons name="mail" size={20} color="#7B68EE" style={styles.cardIcon} />
                     <Text style={styles.cardTitle}>Recent Gift News</Text>
                   </View>
                   <Text style={styles.notificationCount}>
@@ -608,7 +608,7 @@ export default function App() {
                   </View>
                 ) : (
                   <View style={styles.emptyState}>
-                    <Ionicons name="gift-outline" size={56} color="#8088fc" style={styles.emptyStateIcon} />
+                    <Ionicons name="gift-outline" size={64} color="#7B68EE" style={styles.emptyStateIcon} />
                     <Text style={styles.emptyStateTitle}>No gift news yet</Text>
                     <Text style={styles.emptyStateDescription}>
                       Send a test notification or wait for new gift opportunities to be detected!
@@ -627,289 +627,290 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F0F0F',
+    backgroundColor: '#0A0A0F',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 50,
+    paddingBottom: 60,
   },
   content: {
     flex: 1,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
-    backgroundColor: 'rgba(21, 21, 21, 0.95)',
-    backdropFilter: 'blur(10px)',
+    paddingHorizontal: 28,
+    paddingTop: 24,
+    paddingBottom: 20,
+    backgroundColor: 'rgba(15, 15, 24, 0.98)',
+    backdropFilter: 'blur(20px)',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(128, 136, 252, 0.1)',
+    borderBottomColor: 'rgba(123, 104, 238, 0.08)',
+    shadowColor: 'rgba(123, 104, 238, 0.15)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   headerTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   headerIcon: {
-    marginRight: 8,
+    marginRight: 12,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: '900',
     color: '#FFFFFF',
-    letterSpacing: -1,
-    textShadowColor: 'rgba(128, 136, 252, 0.3)',
+    letterSpacing: -1.5,
+    textShadowColor: 'rgba(123, 104, 238, 0.4)',
     textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    textShadowRadius: 12,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Display' : 'Roboto',
   },
   headerSubtitle: {
-    fontSize: 12,
-    color: '#B0B0B0',
+    fontSize: 14,
+    color: '#A8A8B3',
     fontWeight: '600',
-    marginBottom: 2,
-    letterSpacing: 0.5,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    marginBottom: 4,
+    letterSpacing: 0.8,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
   },
   connectionStatus: {
-    fontSize: 11,
-    color: '#D0D0D0',
+    fontSize: 12,
+    color: '#C5C5D0',
     fontWeight: '500',
-    letterSpacing: 0.3,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.4,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
   },
   statusIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 25,
-    backgroundColor: 'rgba(42, 42, 42, 0.7)',
-    backdropFilter: 'blur(20px)',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 30,
+    backgroundColor: 'rgba(25, 25, 35, 0.85)',
+    backdropFilter: 'blur(30px)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   statusConnected: {
-    backgroundColor: 'rgba(76, 175, 80, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(76, 175, 80, 0.4)',
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    backgroundColor: 'rgba(0, 212, 170, 0.12)',
+    borderColor: 'rgba(0, 212, 170, 0.25)',
+    shadowColor: '#00D4AA',
   },
   statusDisconnected: {
-    backgroundColor: 'rgba(255, 107, 107, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 107, 107, 0.4)',
+    backgroundColor: 'rgba(255, 107, 107, 0.12)',
+    borderColor: 'rgba(255, 107, 107, 0.25)',
     shadowColor: '#FF6B6B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
   },
   statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 8,
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.6,
-    shadowRadius: 4,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 10,
   },
   dotConnected: {
-    backgroundColor: '#4CAF50',
-    shadowColor: '#4CAF50',
+    backgroundColor: '#00D4AA',
+    shadowColor: '#00D4AA',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
   },
   dotDisconnected: {
     backgroundColor: '#FF6B6B',
     shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
   },
   statusText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: '#FFFFFF',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
   },
   mainContent: {
     flex: 1,
-    paddingHorizontal: 24,
-    marginTop: 16,
+    paddingHorizontal: 28,
+    marginTop: 24,
   },
   statusCard: {
-    backgroundColor: 'rgba(30, 30, 30, 0.8)',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
+    backgroundColor: 'rgba(20, 20, 30, 0.9)',
+    borderRadius: 28,
+    padding: 28,
+    marginBottom: 24,
     borderWidth: 1,
-    borderColor: 'rgba(128, 136, 252, 0.15)',
-    backdropFilter: 'blur(20px)',
-    shadowColor: 'rgba(128, 136, 252, 0.2)',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 10,
+    borderColor: 'rgba(123, 104, 238, 0.12)',
+    backdropFilter: 'blur(30px)',
+    shadowColor: 'rgba(123, 104, 238, 0.25)',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
+    elevation: 16,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   cardTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   cardIcon: {
-    marginRight: 8,
+    marginRight: 12,
   },
   cardTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: -0.5,
-    textShadowColor: 'rgba(128, 136, 252, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: -0.8,
+    textShadowColor: 'rgba(123, 104, 238, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Display' : 'Roboto',
   },
   notificationCount: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#FFFFFF',
     fontWeight: '700',
-    backgroundColor: 'rgba(128, 136, 252, 0.3)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
+    backgroundColor: 'rgba(123, 104, 238, 0.25)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(128, 136, 252, 0.4)',
-    shadowColor: '#8088fc',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    letterSpacing: 0.5,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    borderColor: 'rgba(123, 104, 238, 0.35)',
+    shadowColor: '#7B68EE',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    letterSpacing: 0.6,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
   },
   cardDescription: {
-    fontSize: 16,
-    color: '#E0E0E0',
-    lineHeight: 24,
-    marginBottom: 18,
+    fontSize: 18,
+    color: '#E8E8F0',
+    lineHeight: 28,
+    marginBottom: 24,
     fontWeight: '500',
-    letterSpacing: 0.2,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.3,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
   },
   statusInfo: {
-    marginBottom: 20,
+    marginBottom: 28,
   },
   statusInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   statusIcon: {
-    marginRight: 6,
+    marginRight: 8,
   },
   statusInfoText: {
-    fontSize: 14,
-    color: '#C0C0C0',
-    fontWeight: '500',
-    letterSpacing: 0.3,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontSize: 15,
+    color: '#A8A8B3',
+    fontWeight: '600',
+    letterSpacing: 0.4,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
   },
   statusPulse: {
     alignSelf: 'center',
-    width: 70,
-    height: 70,
+    width: 80,
+    height: 80,
     justifyContent: 'center',
     alignItems: 'center',
   },
   pulseRing: {
     position: 'absolute',
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     borderWidth: 2,
-    borderColor: 'rgba(128, 136, 252, 0.4)',
-    opacity: 0.8,
-    shadowColor: '#8088fc',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    borderColor: 'rgba(123, 104, 238, 0.35)',
+    opacity: 0.9,
+    shadowColor: '#7B68EE',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
   },
   pulsing: {
     // Animation placeholder
   },
   pulseCore: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
   },
   pulseCoreOnline: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#4CAF50',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#00D4AA',
   },
   pulseCoreOffline: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#FF6B6B',
     shadowColor: '#FF6B6B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
   },
   buttonContainer: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   buttonIcon: {
-    marginRight: 8,
+    marginRight: 12,
   },
   primaryButton: {
-    borderRadius: 20,
-    marginBottom: 16,
+    borderRadius: 24,
+    marginBottom: 20,
     overflow: 'hidden',
-    shadowColor: 'rgba(128, 136, 252, 0.4)',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowColor: 'rgba(123, 104, 238, 0.5)',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
+    elevation: 16,
   },
   secondaryButton: {
-    backgroundColor: 'rgba(30, 30, 30, 0.8)',
-    borderRadius: 20,
+    backgroundColor: 'rgba(20, 20, 30, 0.9)',
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(128, 136, 252, 0.3)',
-    backdropFilter: 'blur(10px)',
-    shadowColor: 'rgba(128, 136, 252, 0.2)',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
+    borderColor: 'rgba(123, 104, 238, 0.25)',
+    backdropFilter: 'blur(20px)',
+    shadowColor: 'rgba(123, 104, 238, 0.3)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 12,
   },
   buttonGradient: {
-    paddingVertical: 20,
-    paddingHorizontal: 28,
+    paddingVertical: 24,
+    paddingHorizontal: 32,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 20,
+    borderRadius: 24,
   },
   secondaryButtonContent: {
-    paddingVertical: 20,
-    paddingHorizontal: 28,
+    paddingVertical: 24,
+    paddingHorizontal: 32,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -918,92 +919,92 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   primaryButtonText: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
-    letterSpacing: 0.5,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.6,
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
   },
   secondaryButtonText: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
-    color: '#8088fc',
-    letterSpacing: 0.5,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: '#7B68EE',
+    letterSpacing: 0.6,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
   },
   notificationsCard: {
-    backgroundColor: 'rgba(30, 30, 30, 0.8)',
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 24,
+    backgroundColor: 'rgba(20, 20, 30, 0.9)',
+    borderRadius: 28,
+    padding: 28,
+    marginBottom: 28,
     borderWidth: 1,
-    borderColor: 'rgba(128, 136, 252, 0.15)',
-    backdropFilter: 'blur(20px)',
-    minHeight: 300,
-    shadowColor: 'rgba(128, 136, 252, 0.2)',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 10,
+    borderColor: 'rgba(123, 104, 238, 0.12)',
+    backdropFilter: 'blur(30px)',
+    minHeight: 320,
+    shadowColor: 'rgba(123, 104, 238, 0.25)',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
+    elevation: 16,
   },
   notificationsListContainer: {
     flex: 1,
-    height: 300,
+    height: 320,
   },
   notificationsList: {
     flex: 1,
   },
   flatListContent: {
-    paddingBottom: 12,
+    paddingBottom: 16,
   },
   notificationItem: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   notificationCard: {
-    backgroundColor: 'rgba(42, 42, 42, 0.8)',
-    borderRadius: 16,
-    padding: 20,
+    backgroundColor: 'rgba(28, 28, 40, 0.95)',
+    borderRadius: 20,
+    padding: 24,
     borderLeftWidth: 4,
-    borderLeftColor: 'rgba(128, 136, 252, 0.8)',
-    backdropFilter: 'blur(10px)',
-    shadowColor: 'rgba(128, 136, 252, 0.15)',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    borderLeftColor: 'rgba(123, 104, 238, 0.8)',
+    backdropFilter: 'blur(20px)',
+    shadowColor: 'rgba(123, 104, 238, 0.2)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 12,
     borderWidth: 1,
-    borderColor: 'rgba(128, 136, 252, 0.1)',
+    borderColor: 'rgba(123, 104, 238, 0.08)',
   },
   notificationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 14,
   },
   notificationIcon: {
-    marginRight: 8,
+    marginRight: 12,
   },
   notificationHeadline: {
-    fontSize: 16,
+    fontSize: 17,
     color: '#FFFFFF',
     fontWeight: '700',
-    letterSpacing: -0.2,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: -0.3,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
     flex: 1,
   },
   messageContainer: {
-    marginBottom: 10,
+    marginBottom: 14,
   },
   notificationMessage: {
-    fontSize: 14,
-    color: '#E0E0E0',
+    fontSize: 15,
+    color: '#E0E0E8',
     fontWeight: '500',
-    lineHeight: 20,
-    letterSpacing: 0.1,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    marginBottom: 8,
+    lineHeight: 24,
+    letterSpacing: 0.2,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
+    marginBottom: 12,
   },
   notificationActions: {
     flexDirection: 'row',
@@ -1011,73 +1012,79 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   readMoreButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    backgroundColor: 'rgba(128, 136, 252, 0.1)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(123, 104, 238, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(123, 104, 238, 0.25)',
   },
   readMoreText: {
-    fontSize: 12,
-    color: '#8088fc',
+    fontSize: 13,
+    color: '#7B68EE',
     fontWeight: '700',
-    letterSpacing: 0.3,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.4,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
   },
   viewChannelButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    backgroundColor: 'rgba(128, 136, 252, 0.15)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(123, 104, 238, 0.18)',
     borderWidth: 1,
-    borderColor: 'rgba(128, 136, 252, 0.3)',
+    borderColor: 'rgba(123, 104, 238, 0.35)',
+    shadowColor: '#7B68EE',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   viewChannelIcon: {
-    marginRight: 4,
+    marginRight: 6,
   },
   viewChannelText: {
-    fontSize: 11,
-    color: '#8088fc',
+    fontSize: 12,
+    color: '#7B68EE',
     fontWeight: '600',
-    letterSpacing: 0.2,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.3,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
   },
   notificationTimestamp: {
-    fontSize: 11,
-    color: '#A0A0A0',
+    fontSize: 12,
+    color: '#8E8E9A',
     fontWeight: '500',
-    letterSpacing: 0.2,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.3,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 40,
+    paddingVertical: 48,
   },
   emptyStateIcon: {
-    marginBottom: 16,
-    opacity: 0.7,
+    marginBottom: 20,
+    opacity: 0.8,
   },
   emptyStateTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 10,
-    letterSpacing: -0.3,
-    textShadowColor: 'rgba(128, 136, 252, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    marginBottom: 12,
+    letterSpacing: -0.4,
+    textShadowColor: 'rgba(123, 104, 238, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Display' : 'Roboto',
   },
   emptyStateDescription: {
-    fontSize: 14,
-    color: '#B0B0B0',
+    fontSize: 15,
+    color: '#A8A8B3',
     textAlign: 'center',
-    lineHeight: 22,
-    maxWidth: 280,
+    lineHeight: 24,
+    maxWidth: 300,
     fontWeight: '500',
-    letterSpacing: 0.2,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    letterSpacing: 0.3,
+    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
   },
 });
