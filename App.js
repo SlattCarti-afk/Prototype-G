@@ -13,7 +13,8 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: true,
-    shouldSetBadge: false,
+    shouldSetBadge: true,
+    priority: Notifications.AndroidImportance.HIGH,
   }),
 });
 
@@ -156,7 +157,29 @@ export default function App() {
       });
 
       if (response.ok) {
-        Alert.alert('✅ Success', 'Test notification sent to backend! Check the backend logs to confirm receipt.');
+        Alert.alert('✅ Success', 'Test notification sent to backend! You should receive a push notification shortly.');
+        
+        // Schedule a local push notification to simulate backend response
+        setTimeout(async () => {
+          try {
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: "🎁 TGift Alert",
+                body: "Test notification received from backend! Your gift monitoring system is working.",
+                data: { 
+                  type: 'backend_test_response',
+                  timestamp: new Date().toISOString()
+                },
+                sound: true,
+                priority: Notifications.AndroidImportance.HIGH,
+              },
+              trigger: { seconds: 2 },
+            });
+          } catch (error) {
+            console.error('Failed to schedule response notification:', error);
+          }
+        }, 500);
+        
         // Also try to refresh the backend status
         setTimeout(() => {
           checkBackendStatus();
@@ -225,7 +248,10 @@ export default function App() {
           name: 'TGift Notifications',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#7289DA',
+          lightColor: '#8088fc',
+          sound: true,
+          enableLights: true,
+          enableVibrate: true,
         });
       }
 
