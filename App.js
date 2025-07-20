@@ -278,12 +278,7 @@ export default function App() {
 
     return (
       <TouchableOpacity style={styles.notificationItem} onPress={openTelegramChannel}>
-        <LinearGradient
-          colors={['#8088fc', '#b1ecfd']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.notificationGradient}
-        >
+        <View style={styles.notificationCard}>
           <Text style={styles.notificationHeadline}>{headline}</Text>
           <View style={styles.messageContainer}>
             <Text style={styles.notificationMessage}>
@@ -307,7 +302,7 @@ export default function App() {
           <Text style={styles.notificationTimestamp}>
             {new Date(item.timestamp).toLocaleString()}
           </Text>
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -315,10 +310,6 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-        <LinearGradient
-          colors={['#8088fc', '#b1ecfd']}
-          style={StyleSheet.absoluteFillObject}
-        />
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           {/* Header */}
           <View style={styles.header}>
@@ -332,12 +323,7 @@ export default function App() {
           {/* Main Content */}
           <View style={styles.mainContent}>
             {/* Status Card */}
-            <LinearGradient
-              colors={['#8088fc', '#b1ecfd']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.card}
-            >
+            <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <Text style={styles.cardTitle}>🎁 Monitoring For New Gifts</Text>
               </View>
@@ -346,9 +332,12 @@ export default function App() {
               </Text>
               <View style={styles.statusPulse}>
                 <View style={[styles.pulseRing, isPolling && styles.pulsing]} />
-                <View style={styles.pulseCore} />
+                <LinearGradient
+                  colors={['#8088fc', '#b1ecfd']}
+                  style={styles.pulseCore}
+                />
               </View>
-            </LinearGradient>
+            </View>
 
             {/* Action Buttons */}
             <View style={styles.buttonContainer}>
@@ -381,59 +370,42 @@ export default function App() {
                 disabled={isLoading}
                 activeOpacity={0.8}
               >
-                <LinearGradient
-                  colors={['#8088fc', '#b1ecfd']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
-                >
+                <View style={styles.secondaryButtonContent}>
                   {isLoading ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
+                    <ActivityIndicator color="#8088fc" size="small" />
                   ) : (
                     <>
                       <Text style={styles.secondaryButtonIcon}>🔄</Text>
                       <Text style={styles.secondaryButtonText}>Refresh Connection</Text>
                     </>
                   )}
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
             </View>
 
             {/* Notifications List */}
             <View style={styles.notificationsCard}>
-              <LinearGradient
-                colors={['#8088fc', '#b1ecfd']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.notificationsGradient}
-              >
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>📨 Recent Gift Alerts</Text>
-                </View>
-                {notifications.length > 0 ? (
-                  <FlatList
-                    data={notifications}
-                    renderItem={renderNotificationItem}
-                    keyExtractor={(item, index) => `${item.timestamp}-${index}`}
-                    style={styles.notificationsList}
-                    showsVerticalScrollIndicator={false}
-                  />
-                ) : (
-                  <Text style={styles.emptyNotifications}>
-                    No gift alerts yet. Send a test notification to get started! 🎁
-                  </Text>
-                )}
-              </LinearGradient>
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>📨 Recent Gift Alerts</Text>
+              </View>
+              {notifications.length > 0 ? (
+                <FlatList
+                  data={notifications}
+                  renderItem={renderNotificationItem}
+                  keyExtractor={(item, index) => `${item.timestamp}-${index}`}
+                  style={styles.notificationsList}
+                  showsVerticalScrollIndicator={false}
+                />
+              ) : (
+                <Text style={styles.emptyNotifications}>
+                  No gift alerts yet. Send a test notification to get started! 🎁
+                </Text>
+              )}
             </View>
 
             {/* Token Information */}
             {expoPushToken && (
-              <LinearGradient
-                colors={['#8088fc', '#b1ecfd']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.tokenCard}
-              >
+              <View style={styles.tokenCard}>
                 <View style={styles.tokenHeader}>
                   <Text style={styles.tokenTitle}>🔑 Push Token</Text>
                   <View style={styles.tokenBadge}>
@@ -447,7 +419,7 @@ export default function App() {
                     {expoPushToken}
                   </Text>
                 </View>
-              </LinearGradient>
+              </View>
             )}
           </View>
         </Animated.View>
@@ -459,7 +431,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#8088fc',
+    backgroundColor: '#151515',
   },
   content: {
     flex: 1,
@@ -483,7 +455,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#A0A0A0',
+    color: '#888888',
     fontWeight: '500',
   },
   statusIndicator: {
@@ -492,13 +464,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#2A2A2A',
   },
   statusConnected: {
     backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    borderWidth: 1,
+    borderColor: '#4CAF50',
   },
   statusDisconnected: {
     backgroundColor: 'rgba(255, 107, 107, 0.2)',
+    borderWidth: 1,
+    borderColor: '#FF6B6B',
   },
   statusDot: {
     width: 8,
@@ -522,14 +498,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   card: {
+    backgroundColor: '#1E1E1E',
     borderRadius: 20,
     padding: 24,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
   cardHeader: {
     marginBottom: 12,
@@ -542,10 +516,9 @@ const styles = StyleSheet.create({
   },
   cardDescription: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: '#CCCCCC',
     lineHeight: 24,
     marginBottom: 20,
-    opacity: 0.9,
   },
   statusPulse: {
     alignSelf: 'center',
@@ -560,17 +533,16 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: '#8088fc',
     opacity: 0.6,
   },
   pulsing: {
-    animation: 'pulse 2s infinite',
+    // Note: CSS animation won't work in React Native, but keeping for web compatibility
   },
   pulseCore: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#FFFFFF',
   },
   buttonContainer: {
     marginBottom: 24,
@@ -578,19 +550,13 @@ const styles = StyleSheet.create({
   primaryButton: {
     borderRadius: 16,
     marginBottom: 12,
-    shadowColor: '#8088fc',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    overflow: 'hidden',
   },
   secondaryButton: {
+    backgroundColor: '#1E1E1E',
     borderRadius: 16,
-    shadowColor: '#8088fc',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#8088fc',
   },
   buttonGradient: {
     paddingVertical: 18,
@@ -599,6 +565,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 16,
+  },
+  secondaryButtonContent: {
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -619,21 +592,15 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#8088fc',
   },
   notificationsCard: {
+    backgroundColor: '#1E1E1E',
     borderRadius: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-    maxHeight: 400,
-  },
-  notificationsGradient: {
     padding: 24,
-    borderRadius: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
     maxHeight: 400,
   },
   notificationsList: {
@@ -641,15 +608,16 @@ const styles = StyleSheet.create({
   },
   notificationItem: {
     marginBottom: 12,
-    borderRadius: 12,
-    overflow: 'hidden',
   },
-  notificationGradient: {
-    padding: 16,
+  notificationCard: {
+    backgroundColor: '#2A2A2A',
     borderRadius: 12,
+    padding: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#8088fc',
   },
   notificationHeadline: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#FFFFFF',
     fontWeight: '700',
     marginBottom: 8,
@@ -659,10 +627,9 @@ const styles = StyleSheet.create({
   },
   notificationMessage: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: '#CCCCCC',
     fontWeight: '400',
     lineHeight: 20,
-    opacity: 0.9,
   },
   readMoreButton: {
     marginTop: 4,
@@ -670,27 +637,27 @@ const styles = StyleSheet.create({
   },
   readMoreText: {
     fontSize: 12,
-    color: '#FFFFFF',
+    color: '#8088fc',
     fontWeight: '600',
-    opacity: 0.8,
   },
   notificationTimestamp: {
     fontSize: 11,
-    color: '#FFFFFF',
+    color: '#888888',
     fontWeight: '400',
-    opacity: 0.7,
   },
   emptyNotifications: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: '#888888',
     textAlign: 'center',
     fontStyle: 'italic',
     paddingVertical: 20,
-    opacity: 0.8,
   },
   tokenCard: {
+    backgroundColor: '#1E1E1E',
     borderRadius: 16,
     padding: 20,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
   tokenHeader: {
     flexDirection: 'row',
@@ -704,7 +671,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   tokenBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#8088fc',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -715,15 +682,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   tokenContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#2A2A2A',
     borderRadius: 12,
     padding: 16,
   },
   tokenText: {
     fontSize: 12,
-    color: '#FFFFFF',
+    color: '#CCCCCC',
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 18,
-    opacity: 0.9,
   },
 });
