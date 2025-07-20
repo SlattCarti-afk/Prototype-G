@@ -199,7 +199,7 @@ export default function App() {
         const data = await response.json();
         console.log('Status data:', data);
         setIsConnected(true);
-        setBackendStatus('🟢 Connected');
+        setBackendStatus('Connected');
       } else {
         const errorText = await response.text();
         console.log('Status error response:', errorText);
@@ -208,7 +208,7 @@ export default function App() {
       }
     } catch (error) {
       setIsConnected(false);
-      setBackendStatus('🔴 Connection Failed');
+      setBackendStatus('Connection Failed');
       console.error('Backend status check failed:', error);
     }
   };
@@ -504,7 +504,15 @@ export default function App() {
                 <StatusIndicator connected={isConnected} />
               </View>
               <Text style={styles.headerSubtitle}>Gift Detection & Alert System</Text>
-              <Text style={styles.connectionStatus}>{backendStatus}</Text>
+              <View style={styles.connectionStatusContainer}>
+                <Ionicons 
+                  name={isConnected ? "checkmark-circle" : "close-circle"} 
+                  size={12} 
+                  color={isConnected ? "#4CAF50" : "#FF6B6B"} 
+                  style={styles.connectionStatusIcon} 
+                />
+                <Text style={styles.connectionStatus}>{backendStatus}</Text>
+              </View>
             </View>
 
             {/* Main Content */}
@@ -679,9 +687,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
+  connectionStatusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  connectionStatusIcon: {
+    marginRight: 4,
+  },
   connectionStatus: {
     fontSize: 11,
-    color: '#D0D0D0',
+    color: '#B0B0B0',
     fontWeight: '500',
     letterSpacing: 0.3,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
