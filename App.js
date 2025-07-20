@@ -441,10 +441,11 @@ export default function App() {
       .replace(/\n\s*—\s*NEWS\s*\n/gi, '\n') // Remove "— NEWS" between newlines
       .trim();
     const shouldShowReadMore = message.length > 100;
-    const displayMessage = shouldShowReadMore ? message.substring(0, 100) + '...' : message;
+    const isExpanded = expandedNotifications.has(index);
+    const displayMessage = (shouldShowReadMore && !isExpanded) ? message.substring(0, 100) + '...' : message;
 
     return (
-      <TouchableOpacity style={styles.notificationItem} onPress={openTelegramChannel} activeOpacity={0.7}>
+      <View style={styles.notificationItem}>
         <View style={styles.notificationCard}>
           <View style={styles.notificationHeader}>
             <Ionicons name="gift" size={16} color="#8088fc" style={styles.notificationIcon} />
@@ -454,25 +455,33 @@ export default function App() {
             <Text style={styles.notificationMessage}>
               {displayMessage}
             </Text>
-            {shouldShowReadMore && (
+            <View style={styles.notificationActions}>
+              {shouldShowReadMore && (
+                <TouchableOpacity 
+                  style={styles.readMoreButton}
+                  onPress={() => toggleNotificationExpansion(index)}
+                >
+                  <Text style={styles.readMoreText}>
+                    {isExpanded ? 'Show less' : 'Read more'}
+                  </Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity 
-                style={styles.readMoreButton}
-                onPress={(e) => {
-                  e.stopPropagation();
-                  openTelegramChannel();
-                }}
+                style={styles.viewChannelButton}
+                onPress={openTelegramChannel}
               >
-                <Text style={styles.readMoreText}>
-                  Read more
+                <Ionicons name="arrow-forward" size={12} color="#8088fc" style={styles.viewChannelIcon} />
+                <Text style={styles.viewChannelText}>
+                  View Channel
                 </Text>
               </TouchableOpacity>
-            )}
+            </View>
           </View>
           <Text style={styles.notificationTimestamp}>
             {new Date(item.timestamp).toLocaleString()}
           </Text>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -736,6 +745,7 @@ const styles = StyleSheet.create({
   mainContent: {
     flex: 1,
     paddingHorizontal: 24,
+    marginTop: 16,
   },
   statusCard: {
     backgroundColor: 'rgba(30, 30, 30, 0.8)',
@@ -993,10 +1003,14 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     letterSpacing: 0.1,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    marginBottom: 8,
+  },
+  notificationActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   readMoreButton: {
-    marginTop: 6,
-    alignSelf: 'flex-start',
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 8,
@@ -1007,6 +1021,26 @@ const styles = StyleSheet.create({
     color: '#8088fc',
     fontWeight: '700',
     letterSpacing: 0.3,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  viewChannelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(128, 136, 252, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(128, 136, 252, 0.3)',
+  },
+  viewChannelIcon: {
+    marginRight: 4,
+  },
+  viewChannelText: {
+    fontSize: 11,
+    color: '#8088fc',
+    fontWeight: '600',
+    letterSpacing: 0.2,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   notificationTimestamp: {
