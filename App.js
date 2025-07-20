@@ -19,6 +19,50 @@ Notifications.setNotificationHandler({
   }),
 });
 
+const PulsingDot = () => {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const pulse = () => {
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ]).start(() => pulse());
+    };
+    pulse();
+  }, []);
+
+  return (
+    <Animated.View
+      style={[
+        {
+          width: 20,
+          height: 20,
+          borderRadius: 10,
+          transform: [{ scale: pulseAnim }],
+        }
+      ]}
+    >
+      <LinearGradient
+        colors={['#4CAF50', '#66BB6A', '#81C784']}
+        style={{
+          width: 20,
+          height: 20,
+          borderRadius: 10,
+        }}
+      />
+    </Animated.View>
+  );
+};
+
 export default function App() {
   const [expoPushToken, setExpoPushToken] = useState('');
   const [notification, setNotification] = useState(false);
@@ -369,8 +413,8 @@ export default function App() {
   const renderNotificationItem = ({ item, index }) => {
     const isExpanded = expandedNotifications.has(index);
     const headline = item.headline || "🎁 New Gift Alert";
-    // Clean the message by removing standalone "news" text and extra whitespace
-    const message = (item.message || "").replace(/^\s*news\s*$/gmi, '').replace(/\s+/g, ' ').trim();
+    // Clean the message by removing standalone "news" text but preserve formatting
+    const message = (item.message || "").replace(/^\s*news\s*$/gmi, '').trim();
     const shouldShowReadMore = message.length > 100;
     const displayMessage = !isExpanded && shouldShowReadMore ? message.substring(0, 100) : message;
 
@@ -441,10 +485,11 @@ export default function App() {
                 </View>
                 <View style={styles.statusPulse}>
                   <View style={[styles.pulseRing, isPolling && styles.pulsing]} />
-                  <LinearGradient
-                    colors={isConnected ? ['#4CAF50', '#8BC34A'] : ['#FF6B6B', '#FF8E8E']}
-                    style={styles.pulseCore}
-                  />
+                  {isConnected ? (
+                    <PulsingDot />
+                  ) : (
+                    <View style={styles.pulseCoreOffline} />
+                  )}
                 </View>
               </View>
 
@@ -678,6 +723,18 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
+  },
+  pulseCoreOnline: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#4CAF50',
+  },
+  pulseCoreOffline: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FF6B6B',
   },
   buttonContainer: {
     marginBottom: 24,
