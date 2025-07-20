@@ -29,10 +29,12 @@ export default function App() {
   const [isPolling, setIsPolling] = useState(false);
   const [expandedNotifications, setExpandedNotifications] = useState(new Set());
   const [lastFetchTime, setLastFetchTime] = useState(null);
+  const [countdown, setCountdown] = useState(5);
   const notificationListener = useRef();
   const responseListener = useRef();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pollInterval = useRef(null);
+  const countdownInterval = useRef(null);
   const [sound, setSound] = useState();
 
   useEffect(() => {
@@ -76,6 +78,9 @@ export default function App() {
       Notifications.removeNotificationSubscription(responseListener.current);
       if (pollInterval.current) {
         clearInterval(pollInterval.current);
+      }
+      if (countdownInterval.current) {
+        clearInterval(countdownInterval.current);
       }
       if (sound) {
         sound.unloadAsync();
@@ -129,7 +134,7 @@ export default function App() {
         const data = await response.json();
         console.log('Status data:', data);
         setIsConnected(true);
-        setBackendStatus(`Connected - Bot: ${data.telegram_connected ? '🟢 Online' : '🔴 Offline'}`);
+        setBackendStatus('🟢 Connected');
       } else {
         const errorText = await response.text();
         console.log('Status error response:', errorText);
@@ -149,14 +154,22 @@ export default function App() {
       if (response.ok) {
         const data = await response.json();
         if (data.notifications && data.notifications.length > 0) {
-          const newNotifications = [...data.notifications];
-          setNotifications(newNotifications);
+          // Remove duplicates based on timestamp and message
+          const uniqueNotifications = data.notifications.filter((notification, index, self) =>
+            index === self.findIndex((n) => 
+              n.timestamp === notification.timestamp && n.message === notification.message
+            )
+          );
+          setNotifications(uniqueNotifications);
           setLastFetchTime(new Date());
-          cacheNotifications(newNotifications);
+          cacheNotifications(uniqueNotifications);
         }
       }
+      // Reset countdown after fetch
+      setCountdown(5);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
+      setCountdown(5);
     }
   };
 
@@ -164,13 +177,28 @@ export default function App() {
     if (pollInterval.current) {
       clearInterval(pollInterval.current);
     }
+    if (countdownInterval.current) {
+      clearInterval(countdownInterval.current);
+    }
 
     setIsPolling(true);
     fetchNotifications(); // Initial fetch
+    setCountdown(5);
 
+    // Countdown timer that updates every second
+    countdownInterval.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          return 5; // Reset to 5 when it reaches 0
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Fetch notifications every 5 seconds
     pollInterval.current = setInterval(() => {
       fetchNotifications();
-    }, 60000); // Poll every 1 minute
+    }, 5000);
   };
 
   const playNotificationSound = async () => {
@@ -192,6 +220,7 @@ export default function App() {
   };
 
   const sendTestNotification = async () => {
+    if (isLoading) return; // Prevent double clicks
     setIsLoading(true);
     try {
       const testData = {
@@ -256,6 +285,7 @@ export default function App() {
   };
 
   const refreshConnection = async () => {
+    if (isLoading) return; // Prevent double clicks
     setIsLoading(true);
     try {
       // Check backend status
@@ -404,11 +434,14 @@ export default function App() {
                   <Text style={styles.cardTitle}>🔍 Monitoring Status</Text>
                 </View>
                 <Text style={styles.cardDescription}>
-                  Actively scanning Telegram channels for gift opportunities
+                  Actively Monitoring For New Gifts!
                 </Text>
                 <View style={styles.statusInfo}>
                   <Text style={styles.statusInfoText}>
-                    🔄 Auto-refresh: Every 1 minute
+                    🔄 Auto-refresh: Every 5 seconds
+                  </Text>
+                  <Text style={styles.statusInfoText}>
+                    ⏰ Next refresh in: {countdown} seconds
                   </Text>
                   {lastFetchTime && (
                     <Text style={styles.statusInfoText}>
@@ -462,7 +495,7 @@ export default function App() {
                     ) : (
                       <>
                         <Text style={styles.secondaryButtonIcon}>🔄</Text>
-                        <Text style={styles.secondaryButtonText}>Refresh & Fetch Latest</Text>
+                        <Text style={styles.secondaryButtonText}>Refresh</Text>
                       </>
                     )}
                   </View>
@@ -472,7 +505,7 @@ export default function App() {
               {/* Notifications List */}
               <View style={styles.notificationsCard}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>📨 Recent Gift Alerts</Text>
+                  <Text style={styles.cardTitle}>📨 Recent Gift News</Text>
                   <Text style={styles.notificationCount}>
                     {notifications.length} alerts
                   </Text>
@@ -493,9 +526,9 @@ export default function App() {
                 ) : (
                   <View style={styles.emptyState}>
                     <Text style={styles.emptyStateIcon}>🎁</Text>
-                    <Text style={styles.emptyStateTitle}>No gift alerts yet</Text>
+                    <Text style={styles.emptyStateTitle}>No gift news yet</Text>
                     <Text style={styles.emptyStateDescription}>
-                      Send a test notification or wait for gift opportunities to be detected!
+                      Send a test notification or wait for new gift opportunities to be detected!
                     </Text>
                   </View>
                 )}
