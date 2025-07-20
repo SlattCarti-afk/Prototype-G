@@ -9,7 +9,21 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 
-const BACKEND_BASE_URL = 'https://8ee58e81-aaf6-4f97-8977-e5e3dab7598b-00-2akwa9443cie2.pike.replit.dev';
+let BACKEND_BASE_URL = 'https://8ee58e81-aaf6-4f97-8977-e5e3dab7598b-00-2akwa9443cie2.pike.replit.dev'; // fallback
+
+// Load backend URL from BackendURL.txt file
+const loadBackendURL = async () => {
+  try {
+    const response = await fetch('/BackendURL.txt');
+    if (response.ok) {
+      const url = await response.text();
+      BACKEND_BASE_URL = url.trim();
+      console.log('Backend URL loaded from file:', BACKEND_BASE_URL);
+    }
+  } catch (error) {
+    console.log('Failed to load backend URL from file, using fallback:', BACKEND_BASE_URL);
+  }
+};
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -83,21 +97,24 @@ export default function App() {
   const [sound, setSound] = useState();
 
   useEffect(() => {
+    // Load backend URL from file first
+    loadBackendURL().then(() => {
+      // Load cached notifications
+      loadCachedNotifications();
+
+      // Check backend status
+      checkBackendStatus();
+
+      // Start polling for notifications
+      startPolling();
+    });
+
     // Animate in
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 800,
       useNativeDriver: true,
     }).start();
-
-    // Load cached notifications
-    loadCachedNotifications();
-
-    // Check backend status
-    checkBackendStatus();
-
-    // Start polling for notifications
-    startPolling();
 
     // Simplified token registration to reduce loading time
     registerForPushNotificationsAsync()
@@ -616,7 +633,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 30,
+    paddingBottom: 20,
     backgroundColor: 'rgba(21, 21, 21, 0.95)',
     backdropFilter: 'blur(10px)',
     borderBottomWidth: 1,
@@ -636,7 +653,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '900',
     color: '#FFFFFF',
     letterSpacing: -1,
@@ -646,15 +663,15 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   headerSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#B0B0B0',
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 3,
     letterSpacing: 0.5,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   connectionStatus: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#D0D0D0',
     fontWeight: '500',
     letterSpacing: 0.3,
