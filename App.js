@@ -279,7 +279,7 @@ export default function App() {
     return (
       <TouchableOpacity style={styles.notificationItem} onPress={openTelegramChannel}>
         <LinearGradient
-          colors={['#FF6B6B', '#4ECDC4', '#45B7D1']}
+          colors={['#8088fc', '#b1ecfd']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.notificationGradient}
@@ -316,7 +316,7 @@ export default function App() {
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
         <LinearGradient
-          colors={['#1a1a2e', '#16213e', '#0f3460']}
+          colors={['#8088fc', '#b1ecfd']}
           style={StyleSheet.absoluteFillObject}
         />
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
@@ -333,7 +333,7 @@ export default function App() {
           <View style={styles.mainContent}>
             {/* Status Card */}
             <LinearGradient
-              colors={['#667eea', '#764ba2']}
+              colors={['#8088fc', '#b1ecfd']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.card}
@@ -359,7 +359,7 @@ export default function App() {
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={['#ff7e5f', '#feb47b']}
+                  colors={['#8088fc', '#b1ecfd']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.buttonGradient}
@@ -382,7 +382,7 @@ export default function App() {
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={['#4facfe', '#00f2fe']}
+                  colors={['#8088fc', '#b1ecfd']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.buttonGradient}
@@ -402,7 +402,7 @@ export default function App() {
             {/* Notifications List */}
             <View style={styles.notificationsCard}>
               <LinearGradient
-                colors={['#2C3E50', '#3498DB']}
+                colors={['#8088fc', '#b1ecfd']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.notificationsGradient}
@@ -429,7 +429,7 @@ export default function App() {
             {/* Token Information */}
             {expoPushToken && (
               <LinearGradient
-                colors={['#833ab4', '#fd1d1d', '#fcb045']}
+                colors={['#8088fc', '#b1ecfd']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.tokenCard}
@@ -459,7 +459,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#8088fc',
   },
   content: {
     flex: 1,
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
   primaryButton: {
     borderRadius: 16,
     marginBottom: 12,
-    shadowColor: '#ff7e5f',
+    shadowColor: '#8088fc',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     borderRadius: 16,
-    shadowColor: '#4facfe',
+    shadowColor: '#8088fc',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
