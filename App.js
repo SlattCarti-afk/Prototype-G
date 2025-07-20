@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator, Animated, FlatList } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator, Animated, FlatList, Linking } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const BACKEND_BASE_URL = 'https://8ee58e81-aaf6-4f97-8977-e5e3dab7598b-00-2akwa9443cie2.pike.replit.dev';
 
@@ -24,6 +25,7 @@ export default function App() {
   const [backendStatus, setBackendStatus] = useState('Checking...');
   const [notifications, setNotifications] = useState([]);
   const [isPolling, setIsPolling] = useState(false);
+  const [expandedNotifications, setExpandedNotifications] = useState(new Set());
   const notificationListener = useRef();
   const responseListener = useRef();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -248,23 +250,75 @@ export default function App() {
     <View style={[styles.statusIndicator, connected ? styles.statusConnected : styles.statusDisconnected]}>
       <View style={[styles.statusDot, connected ? styles.dotConnected : styles.dotDisconnected]} />
       <Text style={styles.statusText}>
-        {connected ? 'Connected' : 'Disconnected'}
+        {connected ? 'Online' : 'Offline'}
       </Text>
     </View>
   );
 
-  const renderNotificationItem = ({ item, index }) => (
-    <View style={styles.notificationItem}>
-      <Text style={styles.notificationMessage}>{item.message}</Text>
-      <Text style={styles.notificationTimestamp}>
-        {new Date(item.timestamp).toLocaleString()}
-      </Text>
-    </View>
-  );
+  const toggleNotificationExpansion = (index) => {
+    const newExpanded = new Set(expandedNotifications);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedNotifications(newExpanded);
+  };
+
+  const openTelegramChannel = () => {
+    Linking.openURL('https://t.me/PrototypeOff');
+  };
+
+  const renderNotificationItem = ({ item, index }) => {
+    const isExpanded = expandedNotifications.has(index);
+    const headline = item.headline || "New Gift Alert";
+    const message = item.message || "";
+    const shouldShowReadMore = message.length > 120;
+    const displayMessage = !isExpanded && shouldShowReadMore ? message.substring(0, 120) : message;
+
+    return (
+      <TouchableOpacity style={styles.notificationItem} onPress={openTelegramChannel}>
+        <LinearGradient
+          colors={['#FF6B6B', '#4ECDC4', '#45B7D1']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.notificationGradient}
+        >
+          <Text style={styles.notificationHeadline}>{headline}</Text>
+          <View style={styles.messageContainer}>
+            <Text style={styles.notificationMessage}>
+              {displayMessage}
+              {shouldShowReadMore && !isExpanded && '...'}
+            </Text>
+            {shouldShowReadMore && (
+              <TouchableOpacity 
+                style={styles.readMoreButton}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  toggleNotificationExpansion(index);
+                }}
+              >
+                <Text style={styles.readMoreText}>
+                  {isExpanded ? 'Show less' : 'Read more'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          <Text style={styles.notificationTimestamp}>
+            {new Date(item.timestamp).toLocaleString()}
+          </Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
+        <LinearGradient
+          colors={['#1a1a2e', '#16213e', '#0f3460']}
+          style={StyleSheet.absoluteFillObject}
+        />
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           {/* Header */}
           <View style={styles.header}>
@@ -272,34 +326,29 @@ export default function App() {
               <Text style={styles.headerTitle}>TGift</Text>
               <StatusIndicator connected={isConnected} />
             </View>
-            <Text style={styles.headerSubtitle}>{backendStatus}</Text>
+            <Text style={styles.headerSubtitle}>Gift Detection System</Text>
           </View>
 
           {/* Main Content */}
           <View style={styles.mainContent}>
             {/* Status Card */}
-            <View style={styles.card}>
+            <LinearGradient
+              colors={['#667eea', '#764ba2']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.card}
+            >
               <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>🎁 Service Status</Text>
+                <Text style={styles.cardTitle}>🎁 Monitoring For New Gifts</Text>
               </View>
               <Text style={styles.cardDescription}>
-                {isPolling ? 'Monitoring for new notifications...' : 'Notification monitoring paused'}
+                Actively scanning channels for gift opportunities and notifications
               </Text>
-              <View style={styles.metricsRow}>
-                <View style={styles.metric}>
-                  <Text style={styles.metricValue}>{isConnected ? '✓' : '✗'}</Text>
-                  <Text style={styles.metricLabel}>Backend</Text>
-                </View>
-                <View style={styles.metric}>
-                  <Text style={styles.metricValue}>{notifications.length}</Text>
-                  <Text style={styles.metricLabel}>Messages</Text>
-                </View>
-                <View style={styles.metric}>
-                  <Text style={styles.metricValue}>{isPolling ? '🟢' : '🔴'}</Text>
-                  <Text style={styles.metricLabel}>Polling</Text>
-                </View>
+              <View style={styles.statusPulse}>
+                <View style={[styles.pulseRing, isPolling && styles.pulsing]} />
+                <View style={styles.pulseCore} />
               </View>
-            </View>
+            </LinearGradient>
 
             {/* Action Buttons */}
             <View style={styles.buttonContainer}>
@@ -309,14 +358,21 @@ export default function App() {
                 disabled={isLoading}
                 activeOpacity={0.8}
               >
-                {isLoading ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <>
-                    <Text style={styles.primaryButtonIcon}>🧪</Text>
-                    <Text style={styles.primaryButtonText}>Send Test Notification</Text>
-                  </>
-                )}
+                <LinearGradient
+                  colors={['#ff7e5f', '#feb47b']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.buttonGradient}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <>
+                      <Text style={styles.primaryButtonIcon}>🧪</Text>
+                      <Text style={styles.primaryButtonText}>Send Test Notification</Text>
+                    </>
+                  )}
+                </LinearGradient>
               </TouchableOpacity>
 
               <TouchableOpacity 
@@ -325,40 +381,59 @@ export default function App() {
                 disabled={isLoading}
                 activeOpacity={0.8}
               >
-                {isLoading ? (
-                  <ActivityIndicator color="#7289DA" size="small" />
-                ) : (
-                  <>
-                    <Text style={styles.secondaryButtonIcon}>🔄</Text>
-                    <Text style={styles.secondaryButtonText}>Refresh Status</Text>
-                  </>
-                )}
+                <LinearGradient
+                  colors={['#4facfe', '#00f2fe']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.buttonGradient}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <>
+                      <Text style={styles.secondaryButtonIcon}>🔄</Text>
+                      <Text style={styles.secondaryButtonText}>Refresh Connection</Text>
+                    </>
+                  )}
+                </LinearGradient>
               </TouchableOpacity>
             </View>
 
             {/* Notifications List */}
             <View style={styles.notificationsCard}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>📨 Recent Notifications</Text>
-              </View>
-              {notifications.length > 0 ? (
-                <FlatList
-                  data={notifications}
-                  renderItem={renderNotificationItem}
-                  keyExtractor={(item, index) => `${item.timestamp}-${index}`}
-                  style={styles.notificationsList}
-                  showsVerticalScrollIndicator={false}
-                />
-              ) : (
-                <Text style={styles.emptyNotifications}>
-                  No notifications yet. Send a test notification to get started!
-                </Text>
-              )}
+              <LinearGradient
+                colors={['#2C3E50', '#3498DB']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.notificationsGradient}
+              >
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardTitle}>📨 Recent Gift Alerts</Text>
+                </View>
+                {notifications.length > 0 ? (
+                  <FlatList
+                    data={notifications}
+                    renderItem={renderNotificationItem}
+                    keyExtractor={(item, index) => `${item.timestamp}-${index}`}
+                    style={styles.notificationsList}
+                    showsVerticalScrollIndicator={false}
+                  />
+                ) : (
+                  <Text style={styles.emptyNotifications}>
+                    No gift alerts yet. Send a test notification to get started! 🎁
+                  </Text>
+                )}
+              </LinearGradient>
             </View>
 
             {/* Token Information */}
             {expoPushToken && (
-              <View style={styles.tokenCard}>
+              <LinearGradient
+                colors={['#833ab4', '#fd1d1d', '#fcb045']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.tokenCard}
+              >
                 <View style={styles.tokenHeader}>
                   <Text style={styles.tokenTitle}>🔑 Push Token</Text>
                   <View style={styles.tokenBadge}>
@@ -372,7 +447,7 @@ export default function App() {
                     {expoPushToken}
                   </Text>
                 </View>
-              </View>
+              </LinearGradient>
             )}
           </View>
         </Animated.View>
@@ -384,7 +459,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#151515',
+    backgroundColor: '#1a1a2e',
   },
   content: {
     flex: 1,
@@ -393,7 +468,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 30,
-    backgroundColor: '#151515',
   },
   headerTop: {
     flexDirection: 'row',
@@ -418,12 +492,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   statusConnected: {
-    backgroundColor: 'rgba(114, 137, 218, 0.15)',
+    backgroundColor: 'rgba(76, 175, 80, 0.2)',
   },
   statusDisconnected: {
-    backgroundColor: 'rgba(255, 107, 107, 0.15)',
+    backgroundColor: 'rgba(255, 107, 107, 0.2)',
   },
   statusDot: {
     width: 8,
@@ -432,7 +507,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   dotConnected: {
-    backgroundColor: '#7289DA',
+    backgroundColor: '#4CAF50',
   },
   dotDisconnected: {
     backgroundColor: '#FF6B6B',
@@ -447,7 +522,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   card: {
-    backgroundColor: '#1E1E1E',
     borderRadius: 20,
     padding: 24,
     marginBottom: 20,
@@ -468,61 +542,63 @@ const styles = StyleSheet.create({
   },
   cardDescription: {
     fontSize: 16,
-    color: '#B0B0B0',
+    color: '#FFFFFF',
     lineHeight: 24,
     marginBottom: 20,
+    opacity: 0.9,
   },
-  metricsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  metric: {
+  statusPulse: {
+    alignSelf: 'center',
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  metricValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#7289DA',
-    marginBottom: 4,
+  pulseRing: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    opacity: 0.6,
   },
-  metricLabel: {
-    fontSize: 12,
-    color: '#A0A0A0',
-    fontWeight: '500',
+  pulsing: {
+    animation: 'pulse 2s infinite',
+  },
+  pulseCore: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
   },
   buttonContainer: {
     marginBottom: 24,
   },
   primaryButton: {
-    backgroundColor: '#7289DA',
     borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 24,
     marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#7289DA',
+    shadowColor: '#ff7e5f',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
   secondaryButton: {
-    backgroundColor: '#1E1E1E',
     borderRadius: 16,
+    shadowColor: '#4facfe',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  buttonGradient: {
     paddingVertical: 18,
     paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#7289DA',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+    borderRadius: 16,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -543,55 +619,78 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#7289DA',
+    color: '#FFFFFF',
   },
   notificationsCard: {
-    backgroundColor: '#1E1E1E',
     borderRadius: 20,
-    padding: 24,
     marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
-    maxHeight: 300,
+    maxHeight: 400,
+  },
+  notificationsGradient: {
+    padding: 24,
+    borderRadius: 20,
+    maxHeight: 400,
   },
   notificationsList: {
-    maxHeight: 200,
+    maxHeight: 300,
   },
   notificationItem: {
-    backgroundColor: '#2A2A2A',
-    borderRadius: 12,
-    padding: 16,
     marginBottom: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#7289DA',
+    borderRadius: 12,
+    overflow: 'hidden',
   },
-  notificationMessage: {
-    fontSize: 16,
+  notificationGradient: {
+    padding: 16,
+    borderRadius: 12,
+  },
+  notificationHeadline: {
+    fontSize: 18,
     color: '#FFFFFF',
-    fontWeight: '500',
+    fontWeight: '700',
     marginBottom: 8,
   },
-  notificationTimestamp: {
-    fontSize: 12,
-    color: '#A0A0A0',
+  messageContainer: {
+    marginBottom: 8,
+  },
+  notificationMessage: {
+    fontSize: 14,
+    color: '#FFFFFF',
     fontWeight: '400',
+    lineHeight: 20,
+    opacity: 0.9,
+  },
+  readMoreButton: {
+    marginTop: 4,
+    alignSelf: 'flex-start',
+  },
+  readMoreText: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    opacity: 0.8,
+  },
+  notificationTimestamp: {
+    fontSize: 11,
+    color: '#FFFFFF',
+    fontWeight: '400',
+    opacity: 0.7,
   },
   emptyNotifications: {
     fontSize: 16,
-    color: '#A0A0A0',
+    color: '#FFFFFF',
     textAlign: 'center',
     fontStyle: 'italic',
     paddingVertical: 20,
+    opacity: 0.8,
   },
   tokenCard: {
-    backgroundColor: '#1E1E1E',
     borderRadius: 16,
     padding: 20,
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
   },
   tokenHeader: {
     flexDirection: 'row',
@@ -605,7 +704,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   tokenBadge: {
-    backgroundColor: 'rgba(114, 137, 218, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -613,17 +712,18 @@ const styles = StyleSheet.create({
   tokenBadgeText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#7289DA',
+    color: '#FFFFFF',
   },
   tokenContainer: {
-    backgroundColor: '#0F0F0F',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     padding: 16,
   },
   tokenText: {
     fontSize: 12,
-    color: '#A0A0A0',
+    color: '#FFFFFF',
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 18,
+    opacity: 0.9,
   },
 });
