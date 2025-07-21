@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, createContext, useContext } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Text, View, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator, Animated, FlatList, Linking, ScrollView, Vibration } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
@@ -9,8 +9,6 @@ import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Settings from './Settings';
-import * as Localization from 'expo-localization';
-import i18n from 'i18n-js';
 
 let BACKEND_BASE_URL = 'https://8ee58e81-aaf6-4f97-8977-e5e3dab7598b-00-2akwa9443cie2.pike.replit.dev'; // fallback
 
@@ -359,88 +357,7 @@ const HeartbeatDot = ({ isConnected, animationsEnabled = true }) => {
   );
 };
 
-// Create Language Context
-const LanguageContext = createContext();
-
-// Language Provider Component
-const LanguageProvider = ({ children }) => {
-  const [locale, setLocale] = useState(Localization.locale);
-  const [languageLoading, setLanguageLoading] = useState(true);
-
-  const translations = {
-    en: {
-      appTitle: 'Prototype - G',
-      systemText: 'Gift Alert System',
-      connected: 'Online',
-      connectionFailed: 'Connection Failed',
-      monitoringStatus: 'Monitoring Status',
-      activelyMonitoring: 'Actively Monitoring For New Gifts!',
-      nextRefresh: 'Next refresh in: {{seconds}} seconds',
-      sendTestNotification: 'Send Test Notification',
-      refresh: 'Refresh',
-      recentGiftNews: 'Recent Gift News',
-      alerts: 'alerts',
-      noGiftNews: 'No gift news yet',
-      noGiftNewsDesc: 'Send a test notification or wait for new gift opportunities to be detected!',
-    },
-    ru: {
-      appTitle: 'Прототип - G',
-      systemText: 'Система оповещений о подарках',
-      connected: 'Онлайн',
-      connectionFailed: 'Не удалось подключиться',
-      monitoringStatus: 'Статус мониторинга',
-      activelyMonitoring: 'Активно отслеживаем новые подарки!',
-      nextRefresh: 'Следующее обновление через: {{seconds}} секунд',
-      sendTestNotification: 'Отправить тестовое уведомление',
-      refresh: 'Обновить',
-      recentGiftNews: 'Последние новости о подарках',
-      alerts: 'оповещения',
-      noGiftNews: 'Пока нет новостей о подарках',
-      noGiftNewsDesc: 'Отправьте тестовое уведомление или дождитесь обнаружения новых возможностей получения подарков!',
-    },
-  };
-
-  i18n.translations = translations;
-  i18n.locale = locale;
-  i18n.fallbacks = true;
-
-  const setI18nConfig = () => {
-    // set i18n-js config
-    i18n.translations = translations;
-    i18n.locale = locale;
-  };
-
-  useEffect(() => {
-    setI18nConfig();
-    setLanguageLoading(false);
-  }, [locale]);
-
-  const setLanguage = (newLocale) => {
-    setLocale(newLocale);
-    i18n.locale = newLocale;
-  };
-
-  const t = (key, params) => i18n.t(key, params);
-
-  const value = { locale, setLanguage, t, languageLoading };
-
-  return (
-    <LanguageContext.Provider value={value}>
-      {children}
-    </LanguageContext.Provider>
-  );
-};
-
-// Custom hook to use the language context
-const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
-};
-
-function AppContent() {
+export default function App() {
   const [expoPushToken, setExpoPushToken] = useState('');
   const [notification, setNotification] = useState(false);
   const [testButtonLoading, setTestButtonLoading] = useState(false);
@@ -465,7 +382,6 @@ function AppContent() {
     fontSize: 1,
     notificationSound: 'default',
   });
-  const { t, languageLoading } = useLanguage();
 
   useEffect(() => {
     // Load settings first
@@ -963,159 +879,182 @@ function AppContent() {
     );
   };
 
-  if (languageLoading) {
-    return (
-      <SafeAreaProvider>
-        <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: settings.darkMode ? '#0B0B14' : '#F8F9FA' }}>
-          <ActivityIndicator size="large" color="#B383FF" />
-          <Text style={{ color: settings.darkMode ? '#FFFFFF' : '#1A1A1A', marginTop: 10 }}>Loading...</Text>
-        </SafeAreaView>
-      </SafeAreaProvider>
-    );
-  }
+  const styles = getStyles(settings);
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={[styles.container, { backgroundColor: settings.darkMode ? '#0B0B14' : '#F8F9FA' }]}>
-        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          {/* Header */}
+      <SafeAreaView style={styles.container}>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+            {/* Header */}
           <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              <View style={styles.headerIcon}>
-                <LinearGradient
-                  colors={['#B383FF', '#9B74FF', '#8088fc']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.iconGradient}
-                >
-                  <Ionicons name="gift" size={24} color="#FFFFFF" />
-                </LinearGradient>
-              </View>
-              <View style={styles.headerTextContainer}>
-                <Text style={[styles.headerTitle, { color: settings.darkMode ? '#FFFFFF' : '#1A1A1A' }]}>{t('appTitle')}</Text>
-                <LinearGradient
-                  colors={['#B383FF', '#9B74FF', '#8088fc']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.titleUnderline}
-                />
-                <Text style={[styles.systemText, { color: settings.darkMode ? '#FFFFFF' : '#1A1A1A' }]}>{t('systemText')}</Text>
-              </View>
+            <View style={styles.headerTop}>
+              <View style={styles.headerTitleContainer}>
+                <View style={styles.headerIconContainer}>
+                  <LinearGradient
+                    colors={['#B383FF', '#9B74FF', '#8088fc']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.iconGradient}
+                  >
+                    <Ionicons name="gift" size={24} color="#FFFFFF" />
+                  </LinearGradient>
+                </View>
+                <View style={styles.headerTextContainer}>
+                  <Text style={styles.headerTitle}>Prototype - G</Text>
+                  <LinearGradient
+                    colors={['#B383FF', '#9B74FF', '#8088fc']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.gradientLine}
+                  />
+                  <Text style={styles.systemText}>Gift Alert System</Text>
+                </View>
             </View>
-            
-            {/* Connection Status & Settings */}
             <View style={styles.headerRight}>
-              <View style={styles.connectionContainer}>
-                <HeartbeatDot isConnected={isConnected} animationsEnabled={settings.animations} />
-                <Text style={[styles.connectionText, { color: settings.darkMode ? (isConnected ? '#9AE6B4' : '#FEB2B2') : (isConnected ? '#38A169' : '#E53E3E') }]}>
-                  {isConnected ? t('connected') : t('connectionFailed')}
-                </Text>
-              </View>
               <TouchableOpacity 
-                style={styles.settingsButton}
+                style={styles.settingsButton} 
                 onPress={() => setShowSettings(true)}
+                activeOpacity={0.8}
               >
-                <Ionicons name="settings" size={24} color="#B383FF" />
+                <Ionicons name="settings" size={20} color="#FFFFFF" />
               </TouchableOpacity>
+              <StatusIndicator connected={isConnected} />
+            </View>
+            </View>
+            <View style={styles.connectionStatusContainer}>
+              <Ionicons 
+                name={isConnected ? "checkmark-circle" : "close-circle"} 
+                size={12} 
+                color={isConnected ? "#4CAF50" : "#FF6B6B"} 
+                style={styles.connectionStatusIcon} 
+              />
+              <Text style={styles.connectionStatus}>{backendStatus}</Text>
             </View>
           </View>
 
-          {/* Main Content */}
-          <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-            {/* Status Card */}
-            <View style={[styles.statusCard, { backgroundColor: settings.darkMode ? 'rgba(30, 20, 50, 0.6)' : 'rgba(255, 255, 255, 0.8)' }]}>
-              <View style={styles.statusHeader}>
-                <Ionicons name="pulse" size={20} color="#B383FF" />
-                <Text style={[styles.statusTitle, { color: settings.darkMode ? '#FFFFFF' : '#1A1A1A' }]}>{t('monitoringStatus')}</Text>
-              </View>
-              <Text style={[styles.statusDescription, { color: settings.darkMode ? '#B0B0C0' : '#495057' }]}>
-                {isConnected ? t('activelyMonitoring') : backendStatus}
-              </Text>
-              {isConnected && (
-                <Text style={[styles.countdownText, { color: settings.darkMode ? '#9AE6B4' : '#38A169' }]}>
-                  {t('nextRefresh', { seconds: countdown })}
+            {/* Main Content */}
+            <View style={styles.mainContent}>
+              {/* Status Card */}
+              <View style={styles.statusCard}>
+                <View style={styles.cardHeader}>
+                  <View style={styles.cardTitleContainer}>
+                    <Ionicons name="search" size={18} color="#8088fc" style={styles.cardIcon} />
+                    <Text style={styles.cardTitle}>Monitoring Status</Text>
+                  </View>
+                </View>
+                <Text style={styles.cardDescription}>
+                  Actively Monitoring For New Gifts!
                 </Text>
-              )}
-            </View>
-
-            {/* Action Buttons */}
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.testButton]}
-                onPress={sendTestNotification}
-                disabled={testButtonLoading}
-              >
-                {testButtonLoading ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <>
-                    <Ionicons name="flask" size={16} color="#FFFFFF" />
-                    <Text style={styles.buttonText}>{t('sendTestNotification')}</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionButton, styles.refreshButton]}
-                onPress={refreshConnection}
-                disabled={refreshButtonLoading}
-              >
-                {refreshButtonLoading ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <>
-                    <Ionicons name="refresh" size={16} color="#FFFFFF" />
-                    <Text style={styles.buttonText}>{t('refresh')}</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-
-            {/* Recent Notifications */}
-            <View style={[styles.notificationsContainer, { backgroundColor: settings.darkMode ? 'rgba(30, 20, 50, 0.6)' : 'rgba(255, 255, 255, 0.8)' }]}>
-              <View style={styles.notificationsHeader}>
-                <View style={styles.notificationsTitle}>
-                  <Ionicons name="newspaper" size={20} color="#B383FF" />
-                  <Text style={[styles.sectionTitle, { color: settings.darkMode ? '#FFFFFF' : '#1A1A1A' }]}>{t('recentGiftNews')}</Text>
+                <View style={styles.statusInfo}>
+                  <View style={styles.statusInfoRow}>
+                    <Ionicons name="time" size={14} color="#C0C0C0" style={styles.statusIcon} />
+                    <Text style={styles.statusInfoText}>
+                      Next refresh in: {countdown} seconds
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.alertsBadge}>
-                  <Text style={styles.alertsCount}>{notifications.length}</Text>
-                  <Text style={styles.alertsText}>{t('alerts')}</Text>
+                <View style={styles.statusPulse}>
+                  <View style={[
+                    styles.pulseRing, 
+                    isPolling && styles.pulsing,
+                    {
+                      borderColor: isConnected ? 'rgba(197, 175, 255, 0.4)' : 'rgba(255, 107, 107, 0.4)',
+                      shadowColor: isConnected ? '#C5AFFF' : '#FF6B6B'
+                    }
+                  ]} />
+                  <HeartbeatDot isConnected={isConnected} animationsEnabled={settings.animations} />
                 </View>
               </View>
 
-              {notifications.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <Ionicons name="gift-outline" size={48} color="#9090A0" />
-                  <Text style={[styles.emptyTitle, { color: settings.darkMode ? '#9090A0' : '#6B7280' }]}>{t('noGiftNews')}</Text>
-                  <Text style={[styles.emptyDescription, { color: settings.darkMode ? '#7A7A8A' : '#9CA3AF' }]}>
-                    {t('noGiftNewsDesc')}
+              {/* Action Buttons */}
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity 
+                  style={[styles.primaryButton, testButtonLoading && styles.buttonDisabled]}
+                  onPress={sendTestNotification}
+                  disabled={testButtonLoading}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={['#B383FF', '#9B74FF']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.buttonGradient}
+                  >
+                    {testButtonLoading ? (
+                      <ActivityIndicator color="#FFFFFF" size="small" />
+                    ) : (
+                      <>
+                        <Ionicons name="flask" size={20} color="#FFFFFF" style={styles.buttonIcon} />
+                        <Text style={styles.primaryButtonText}>Send Test Notification</Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.secondaryButton, refreshButtonLoading && styles.buttonDisabled]}
+                  onPress={refreshConnection}
+                  disabled={refreshButtonLoading}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.secondaryButtonContent}>
+                    {refreshButtonLoading ? (
+                      <ActivityIndicator color="#8088fc" size="small" />
+                    ) : (
+                      <>
+                        <Ionicons name="refresh" size={20} color="#8088fc" style={styles.buttonIcon} />
+                        <Text style={styles.secondaryButtonText}>Refresh</Text>
+                      </>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Notifications List */}
+              <View style={styles.notificationsCard}>
+                <View style={styles.cardHeader}>
+                  <View style={styles.cardTitleContainer}>
+                    <Ionicons name="mail" size={18} color="#8088fc" style={styles.cardIcon} />
+                    <Text style={styles.cardTitle}>Recent Gift News</Text>
+                  </View>
+                  <Text style={styles.notificationCount}>
+                    {notifications.length} alerts
                   </Text>
                 </View>
-              ) : (
-                <FlatList
-                  data={notifications}
-                  renderItem={renderNotificationItem}
-                  keyExtractor={(item, index) => `notification-${index}-${item.timestamp}`}
-                  scrollEnabled={false}
-                  showsVerticalScrollIndicator={false}
-                />
-              )}
+                {notifications.length > 0 ? (
+                  <View style={styles.notificationsListContainer}>
+                    <FlatList
+                      data={notifications.slice(0, 20)} // Show only latest 20
+                      renderItem={renderNotificationItem}
+                      keyExtractor={(item, index) => `${item.timestamp}-${index}`}
+                      style={styles.notificationsList}
+                      showsVerticalScrollIndicator={true}
+                      nestedScrollEnabled={true}
+                      scrollEnabled={true}
+                      contentContainerStyle={styles.flatListContent}
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.emptyState}>
+                    <Ionicons name="gift-outline" size={56} color="#8088fc" style={styles.emptyStateIcon} />
+                    <Text style={styles.emptyStateTitle}>No gift news yet</Text>
+                    <Text style={styles.emptyStateDescription}>
+                      Send a test notification or
+One line analysis: This code adds a settings button to the header of the application, integrating it into the existing header structure.
+wait for new gift opportunities to be detected!
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
-
-            {/* About Section */}
-            <View style={styles.aboutSection}>
-              <Text style={[styles.aboutText, { color: settings.darkMode ? '#B0B0C0' : '#6B7280' }]}>
-                Made with JavaScript And Hope • {' '}
-                <TouchableOpacity onPress={openTelegramChannel}>
-                  <Text style={styles.linkText}>@PrototypeGifts</Text>
-                </TouchableOpacity>
-              </Text>
-            </View>
-          </ScrollView>
-        </Animated.View>
-
-        <Settings
+          </Animated.View>
+        </ScrollView>
+        <Settings 
           visible={showSettings}
           onClose={() => setShowSettings(false)}
           onSettingsChange={handleSettingsChange}
@@ -1126,36 +1065,52 @@ function AppContent() {
   );
 }
 
-export default function App() {
-  return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
-  );
-}
-
-const styles = StyleSheet.create({
+const getStyles = (settings) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: settings.darkMode ? '#0B0B14' : '#F8F9FA',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 50,
   },
   content: {
     flex: 1,
   },
   header: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+    backgroundColor: settings.darkMode ? 'rgba(11, 11, 20, 0.95)' : 'rgba(248, 249, 250, 0.95)',
+    backdropFilter: 'blur(10px)',
+    borderBottomWidth: 1,
+    borderBottomColor: settings.darkMode ? 'rgba(197, 175, 255, 0.1)' : 'rgba(108, 117, 125, 0.1)',
+  },
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingTop: Platform.OS === 'ios' ? 8 : 16,
+    marginBottom: 4,
   },
-  headerLeft: {
+  headerTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
   },
-  headerIcon: {
-    marginRight: 12,
+    headerIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+    shadowColor: 'rgba(179, 131, 255, 0.4)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   iconGradient: {
     width: 40,
@@ -1165,179 +1120,398 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTextContainer: {
-    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
+  headerIcon: {
+    marginRight: 8,
+    color: '#C5AFFF',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 24 + (settings.fontSize * 2), // Apply font size setting
+    fontWeight: '900',
+    color: settings.darkMode ? '#FFFFFF' : '#1A1A1A',
+    letterSpacing: -1,
+    textShadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  gradientLine: {
+    height: 3,
+    width: '100%',
+    marginTop: 2,
     marginBottom: 2,
   },
-  titleUnderline: {
-    height: 2,
-    width: 60,
-    marginBottom: 4,
-  },
   systemText: {
-    fontSize: 12,
-    opacity: 0.7,
+    fontSize: 12 + settings.fontSize,
+    color: settings.darkMode ? '#B0B0C0' : '#495057',
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
-  headerRight: {
-    alignItems: 'flex-end',
+  headerSubtitle: {
+    fontSize: 12 + settings.fontSize,
+    color: settings.darkMode ? '#B0B0C0' : '#495057',
+    fontWeight: '600',
+    marginBottom: 2,
+    letterSpacing: 0.5,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
-  connectionContainer: {
+  connectionStatusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
   },
-  connectionText: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 8,
+  connectionStatusIcon: {
+    marginRight: 4,
+  },
+  connectionStatus: {
+    fontSize: 11 + settings.fontSize,
+    color: settings.darkMode ? '#B0B0C0' : '#495057',
+    fontWeight: '500',
+    letterSpacing: 0.3,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  statusIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 25,
+    backgroundColor: 'rgba(30, 20, 50, 0.7)',
+    backdropFilter: 'blur(20px)',
+    shadowColor: 'rgba(197, 175, 255, 0.2)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  statusConnected: {
+    backgroundColor: 'rgba(179, 131, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(179, 131, 255, 0.4)',
+    shadowColor: '#B383FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+  },
+  statusDisconnected: {
+    backgroundColor: 'rgba(255, 107, 107, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 107, 0.4)',
+    shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 8,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+  },
+  dotConnected: {
+    backgroundColor: '#4CAF50',
+    shadowColor: '#4CAF50',
+  },
+  dotDisconnected: {
+    backgroundColor: '#FF6B6B',
+    shadowColor: '#FF6B6B',
+  },
+  statusText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+    headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   settingsButton: {
-    padding: 4,
+    marginRight: 12,
+    backgroundColor: 'rgba(179, 131, 255, 0.2)',
+    padding: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(179, 131, 255, 0.4)',
   },
-  scrollContainer: {
+  mainContent: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    marginTop: 16,
   },
   statusCard: {
-    borderRadius: 16,
+    backgroundColor: settings.darkMode ? 'rgba(20, 15, 35, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
     padding: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(179, 131, 255, 0.2)',
-  },
-  statusHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  statusTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  statusDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  countdownText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
     marginBottom: 20,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  testButton: {
-    backgroundColor: '#8088fc',
-  },
-  refreshButton: {
-    backgroundColor: '#B383FF',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  notificationsContainer: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(179, 131, 255, 0.2)',
+    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.15)' : 'rgba(179, 131, 255, 0.25)',
+    backdropFilter: 'blur(20px)',
+    ...(settings.animations && {
+      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(179, 131, 255, 0.3)',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 10,
+    }),
   },
-  notificationsHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
   },
-  notificationsTitle: {
+  cardTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
+  cardIcon: {
+    marginRight: 8,
+    color: '#C5AFFF',
   },
-  alertsBadge: {
-    backgroundColor: 'rgba(179, 131, 255, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+  cardTitle: {
+    fontSize: 20 + (settings.fontSize * 2),
+    fontWeight: '800',
+    color: settings.darkMode ? '#FFFFFF' : '#1A1A1A',
+    letterSpacing: -0.5,
+    textShadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(108, 117, 125, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  notificationCount: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    backgroundColor: 'rgba(197, 175, 255, 0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 175, 255, 0.4)',
+    shadowColor: '#C5AFFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    letterSpacing: 0.5,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  cardDescription: {
+    fontSize: 16 + settings.fontSize,
+    color: settings.darkMode ? '#B0B0C0' : '#495057',
+    lineHeight: 24,
+    marginBottom: 18,
+    fontWeight: '500',
+    letterSpacing: 0.2,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  statusInfo: {
+    marginBottom: 20,
+  },
+  statusInfoRow: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  alertsCount: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#B383FF',
+  statusIcon: {
+    marginRight: 6,
+    color: '#C5AFFF',
   },
-  alertsText: {
-    fontSize: 10,
-    color: '#B383FF',
+  statusInfoText: {
+    fontSize: 14,
+    color: '#B0B0C0',
+    fontWeight: '500',
+    letterSpacing: 0.3,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  statusPulse: {
+    alignSelf: 'center',
+    width: 70,
+    height: 70,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pulseRing: {
+    position: 'absolute',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 2,
     opacity: 0.8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
-  emptyState: {
+  pulsing: {
+    // Animation placeholder
+  },
+  pulseCore: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  pulseCoreOnline: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#B383FF',
+  },
+  pulseCoreOffline: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FF6B6B',
+    shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+  },
+  buttonContainer: {
+    marginBottom: 24,
+  },
+  buttonIcon: {
+    marginRight: 8,
+  },
+  primaryButton: {
+    borderRadius: 20,
+    marginBottom: 16,
+    overflow: 'hidden',
+    ...(settings.animations && {
+      shadowColor: 'rgba(179, 131, 255, 0.4)',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.4,
+      shadowRadius: 16,
+      elevation: 10,
+    }),
+  },
+  secondaryButton: {
+    backgroundColor: settings.darkMode ? 'rgba(20, 15, 35, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(179, 131, 255, 0.4)',
+    backdropFilter: 'blur(10px)',
+    ...(settings.animations && {
+      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(179, 131, 255, 0.2)',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.25,
+      shadowRadius: 12,
+      elevation: 8,
+    }),
+  },
+  buttonGradient: {
+    paddingVertical: 20,
+    paddingHorizontal: 28,
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 40,
+    justifyContent: 'center',
+    borderRadius: 20,
   },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 12,
-    marginBottom: 4,
+  secondaryButtonContent: {
+    paddingVertical: 20,
+    paddingHorizontal: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  emptyDescription: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  primaryButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  secondaryButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: settings.darkMode ? '#C5AFFF' : '#8B5CF6',
+    letterSpacing: 0.5,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  notificationsCard: {
+    backgroundColor: settings.darkMode ? 'rgba(20, 15, 35, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.15)' : 'rgba(179, 131, 255, 0.25)',
+    backdropFilter: 'blur(20px)',
+    minHeight: 300,
+    ...(settings.animations && {
+      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(179, 131, 255, 0.3)',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 10,
+    }),
+  },
+  notificationsListContainer: {
+    flex: 1,
+    height: 300,
+  },
+  notificationsList: {
+    flex: 1,
+  },
+  flatListContent: {
+    paddingBottom: 12,
   },
   notificationItem: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   notificationCard: {
-    backgroundColor: 'rgba(179, 131, 255, 0.1)',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: settings.darkMode ? 'rgba(30, 20, 50, 0.95)' : 'rgba(248, 249, 250, 0.95)',
+    borderRadius: 16,
+    padding: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: settings.darkMode ? 'rgba(197, 175, 255, 0.8)' : 'rgba(179, 131, 255, 0.8)',
+    backdropFilter: 'blur(10px)',
     borderWidth: 1,
-    borderColor: 'rgba(179, 131, 255, 0.2)',
+    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.1)' : 'rgba(179, 131, 255, 0.2)',
+    ...(settings.animations && {
+      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(179, 131, 255, 0.2)',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.4,
+      shadowRadius: 12,
+      elevation: 8,
+    }),
   },
   notificationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   notificationIcon: {
     marginRight: 8,
+    color: '#C5AFFF',
   },
   notificationHeadline: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#8088fc',
+    fontSize: 16 + settings.fontSize,
+    color: settings.darkMode ? '#FFFFFF' : '#1A1A1A',
+    fontWeight: '700',
+    letterSpacing: -0.2,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
     flex: 1,
   },
   messageContainer: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   notificationMessage: {
-    fontSize: 14,
+    fontSize: 14 + settings.fontSize,
+    color: settings.darkMode ? '#B0B0C0' : '#495057',
+    fontWeight: '500',
     lineHeight: 20,
-    color: '#495057',
+    letterSpacing: 0.1,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
     marginBottom: 8,
   },
   notificationActions: {
@@ -1347,45 +1521,74 @@ const styles = StyleSheet.create({
   },
   readMoreButton: {
     paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(197, 175, 255, 0.1)',
   },
   readMoreText: {
     fontSize: 12,
-    color: '#8088fc',
-    fontWeight: '500',
+    color: '#C5AFFF',
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   viewChannelButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 4,
     paddingHorizontal: 8,
-    backgroundColor: 'rgba(128, 136, 252, 0.1)',
-    borderRadius: 6,
-    gap: 4,
+    borderRadius: 8,
+    backgroundColor: 'rgba(197, 175, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(197, 175, 255, 0.3)',
   },
   viewChannelIcon: {
-    // Icon styles handled by Ionicons
+    marginRight: 4,
+    color: '#C5AFFF',
   },
   viewChannelText: {
-    fontSize: 12,
-    color: '#8088fc',
-    fontWeight: '500',
+    fontSize: 11,
+    color: '#C5AFFF',
+    fontWeight: '600',
+    letterSpacing: 0.2,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   notificationTimestamp: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#9090A0',
-    fontStyle: 'italic',
+    fontWeight: '500',
+    letterSpacing: 0.2,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
-  aboutSection: {
+  emptyState: {
     alignItems: 'center',
-    paddingVertical: 20,
-    marginBottom: 20,
+    justifyContent: 'center',
+    paddingVertical: 40,
   },
-  aboutText: {
-    fontSize: 12,
+  emptyStateIcon: {
+    marginBottom: 16,
+    opacity: 0.7,
+    color: '#C5AFFF',
+  },
+  emptyStateTitle: {
+    fontSize: 18 + (settings.fontSize * 2),
+    fontWeight: '700',
+    color: settings.darkMode ? '#FFFFFF' : '#1A1A1A',
+    marginBottom: 10,
+    letterSpacing: -0.3,
+    textShadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(108, 117, 125, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  emptyStateDescription: {
+    fontSize: 14 + settings.fontSize,
+    color: settings.darkMode ? '#B0B0C0' : '#495057',
     textAlign: 'center',
-  },
-  linkText: {
-    color: '#B383FF',
-    fontWeight: '600',
+    lineHeight: 22,
+    maxWidth: 280,
+    fontWeight: '500',
+    letterSpacing: 0.2,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
 });
