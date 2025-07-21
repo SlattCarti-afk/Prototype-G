@@ -879,8 +879,14 @@ export default function App() {
             <View style={styles.headerTop}>
               <View style={styles.headerTitleContainer}>
                 <View style={styles.headerIconContainer}>
-                  {/* Using icon.png instead of Ionicons gift */}
-                  <View style={styles.customIcon} />
+                  <LinearGradient
+                    colors={['#B383FF', '#9B74FF', '#8088fc']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.iconGradient}
+                  >
+                    <Ionicons name="gift" size={24} color="#FFFFFF" />
+                  </LinearGradient>
                 </View>
                 <View style={styles.headerTextContainer}>
                   <Text style={styles.headerTitle}>Prototype-G</Text>
@@ -1081,16 +1087,21 @@ const getStyles = (settings) => StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(179, 131, 255, 0.15)', // Example background
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
+    shadowColor: 'rgba(179, 131, 255, 0.4)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  customIcon: {
-    width: 24,
-    height: 24,
-    backgroundColor: '#8088fc', // Placeholder for the icon
-    borderRadius: 4,
+  iconGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTextContainer: {
     flexDirection: 'column',
