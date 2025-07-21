@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Text, View, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator, Animated, FlatList, Linking, ScrollView } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -45,14 +44,14 @@ const HeartbeatDot = ({ isConnected }) => {
   useEffect(() => {
     if (previousConnection !== isConnected) {
       console.log('Connection state changed:', previousConnection, '->', isConnected);
-      
+
       // IMMEDIATELY stop any current animation when connection state changes
       if (animationRef.current) {
         console.log('Stopping current animation due to connection change');
         animationRef.current.stop();
         animationRef.current = null;
       }
-      
+
       if (!isConnected && previousConnection) {
         // Going offline - start dying animation
         console.log('Going offline - starting dying animation');
@@ -75,7 +74,7 @@ const HeartbeatDot = ({ isConnected }) => {
         animationRef.current.stop();
         animationRef.current = null;
       }
-      
+
       // If we're offline and in normal/reviving state, go to dead
       if (animationState === 'normal' || animationState === 'reviving') {
         console.log('Setting animation to dead due to offline state');
@@ -107,34 +106,34 @@ const HeartbeatDot = ({ isConnected }) => {
         console.log('Stopping normal heartbeat - not connected or wrong state');
         return;
       }
-      
+
       // Create individual animations that can be stopped
       const beat1Up = Animated.timing(heartbeatAnim, {
         toValue: 1.4,
         duration: 150,
         useNativeDriver: true,
       });
-      
+
       const beat1Down = Animated.timing(heartbeatAnim, {
         toValue: 1,
         duration: 150,
         useNativeDriver: true,
       });
-      
+
       const beat2Up = Animated.timing(heartbeatAnim, {
         toValue: 1.2,
         duration: 100,
         useNativeDriver: true,
       });
-      
+
       const beat2Down = Animated.timing(heartbeatAnim, {
         toValue: 1,
         duration: 100,
         useNativeDriver: true,
       });
-      
+
       const pause = Animated.delay(800);
-      
+
       const sequence = Animated.sequence([
         beat1Up,
         beat1Down, 
@@ -142,7 +141,7 @@ const HeartbeatDot = ({ isConnected }) => {
         beat2Down,
         pause,
       ]);
-      
+
       animationRef.current = sequence;
       sequence.start((finished) => {
         // Clear the ref when animation completes or stops
@@ -212,7 +211,7 @@ const HeartbeatDot = ({ isConnected }) => {
           useNativeDriver: true,
         }),
       ]);
-      
+
       animationRef.current = sequence;
       sequence.start((finished) => {
         // Clear the ref when animation completes
@@ -265,7 +264,7 @@ const HeartbeatDot = ({ isConnected }) => {
         }),
         Animated.delay(300),
       ]);
-      
+
       animationRef.current = sequence;
       sequence.start((finished) => {
         // Clear the ref when animation completes
@@ -346,7 +345,7 @@ export default function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [backendStatus, setBackendStatus] = useState('Checking...');
   const [notifications, setNotifications] = useState([]);
-  const [isPolling, setIsPolling] = useState(false);
+  const [isPolling, setIsPolling] = useState(isPolling);
   const [expandedNotifications, setExpandedNotifications] = useState(new Set());
   const [countdown, setCountdown] = useState(5);
   const notificationListener = useRef();
@@ -355,6 +354,7 @@ export default function App() {
   const pollInterval = useRef(null);
   const countdownInterval = useRef(null);
   const [sound, setSound] = useState();
+	const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     // Load backend URL from file first
@@ -418,7 +418,7 @@ export default function App() {
         const cached = window.localStorage.getItem('tgift_notifications');
         if (cached) {
           const parsedNotifications = JSON.parse(cached);
-          
+
           // Filter to only show NEWS notifications (not test notifications)
           const newsOnlyNotifications = parsedNotifications.filter(notification => 
             notification.message && (
@@ -426,7 +426,7 @@ export default function App() {
               notification.headline && notification.headline.toLowerCase().includes('news')
             ) && !notification.headline?.includes('🧪 Test')
           );
-          
+
           // Remove duplicates when loading
           const uniqueNotifications = newsOnlyNotifications.filter((notification, index, self) =>
             index === self.findIndex((n) => 
@@ -501,14 +501,14 @@ export default function App() {
               notification.headline && notification.headline.toLowerCase().includes('news')
             )
           );
-          
+
           if (newsNotifications.length > 0) {
             // Get current notifications (either from state or cache)
             const currentNotifications = notifications.length > 0 ? notifications : loadCachedNotifications();
-            
+
             // Merge new news notifications with existing ones
             const allNotifications = [...currentNotifications, ...newsNotifications];
-            
+
             // Remove duplicates based on timestamp, message content, and headline
             const uniqueNotifications = allNotifications.filter((notification, index, self) =>
               index === self.findIndex((n) => 
@@ -517,10 +517,10 @@ export default function App() {
                 n.headline === notification.headline
               )
             );
-            
+
             // Sort by timestamp (newest first)
             uniqueNotifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            
+
             console.log('Fetched NEWS notifications:', newsNotifications.length, 'Total unique:', uniqueNotifications.length);
             setNotifications(uniqueNotifications);
             cacheNotifications(uniqueNotifications);
@@ -571,7 +571,7 @@ export default function App() {
         { shouldPlay: true, volume: 0.8 }
       );
       setSound(sound);
-      
+
       setTimeout(async () => {
         if (sound) {
           await sound.unloadAsync();
@@ -607,7 +607,7 @@ export default function App() {
 
         // Don't add test notifications to the Recent Gift News section
         // That section is only for NEWS notifications from the backend
-        
+
         setTimeout(() => {
           checkBackendStatus();
           fetchNotifications();
@@ -658,7 +658,7 @@ export default function App() {
       await checkBackendStatus();
       // Fetch latest notifications
       await fetchNotifications();
-      
+
       Alert.alert('🔄 Refreshed', 'Connection status and notifications updated!');
     } catch (error) {
       Alert.alert('❌ Error', 'Failed to refresh connection');
@@ -804,8 +804,17 @@ export default function App() {
                 <View style={styles.headerTitleContainer}>
                   <Ionicons name="gift" size={22} color="#8088fc" style={styles.headerIcon} />
                   <Text style={styles.headerTitle}>TGift</Text>
-                </View>
+              </View>
+              <View style={styles.headerRight}>
+                <TouchableOpacity 
+                  style={styles.settingsButton} 
+                  onPress={() => setShowSettings(true)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="settings" size={20} color="#FFFFFF" />
+                </TouchableOpacity>
                 <StatusIndicator connected={isConnected} />
+              </View>
               </View>
               <Text style={styles.headerSubtitle}>Gift Detection & Alert System</Text>
               <View style={styles.connectionStatusContainer}>
@@ -926,7 +935,9 @@ export default function App() {
                     <Ionicons name="gift-outline" size={56} color="#8088fc" style={styles.emptyStateIcon} />
                     <Text style={styles.emptyStateTitle}>No gift news yet</Text>
                     <Text style={styles.emptyStateDescription}>
-                      Send a test notification or wait for new gift opportunities to be detected!
+                      Send a test notification or
+One line analysis: This code adds a settings button to the header of the application, integrating it into the existing header structure.
+wait for new gift opportunities to be detected!
                     </Text>
                   </View>
                 )}
@@ -1064,6 +1075,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.5,
+  },
+    headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingsButton: {
+    marginRight: 12,
   },
   mainContent: {
     flex: 1,

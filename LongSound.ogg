@@ -1,0 +1,4 @@
+
+// This would be a longer audio file (4+ seconds) for gift notifications
+// For now, this is a placeholder - you'll need to replace Sound.ogg with a longer audio file
+// The current Sound.ogg will be used as the base, but you should replace it with a 4+ second audio file
