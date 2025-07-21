@@ -809,6 +809,22 @@ export default function App() {
     }
   };
 
+  const getRelativeTime = (timestamp) => {
+    const now = new Date();
+    const notificationTime = new Date(timestamp);
+    const diffInMs = now - notificationTime;
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInDays > 0) {
+      return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+    } else if (diffInHours > 0) {
+      return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
+    } else {
+      return 'Just now';
+    }
+  };
+
   const renderNotificationItem = ({ item, index }) => {
     const headline = item.headline || "New Gift Alert";
     // Clean the message by removing standalone "news" text and "— NEWS" patterns
@@ -856,7 +872,7 @@ export default function App() {
             </View>
           </View>
           <Text style={styles.notificationTimestamp}>
-            {new Date(item.timestamp).toLocaleString()}
+            {getRelativeTime(item.timestamp)}
           </Text>
         </View>
       </View>
