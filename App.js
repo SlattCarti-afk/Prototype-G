@@ -36,10 +36,42 @@ Notifications.setNotificationHandler({
 
 const HeartbeatDot = ({ isConnected }) => {
   const heartbeatAnim = useRef(new Animated.Value(1)).current;
+  const colorAnim = useRef(new Animated.Value(1)).current; // 1 = online, 0 = offline
+  const [animationState, setAnimationState] = useState('normal'); // normal, dying, dead, reviving
+  const [previousConnection, setPreviousConnection] = useState(isConnected);
+  const animationRef = useRef(null);
 
+  // Handle connection state changes
   useEffect(() => {
-    const heartbeat = () => {
-      Animated.sequence([
+    if (previousConnection !== isConnected) {
+      if (!isConnected && previousConnection) {
+        // Going offline - start dying animation
+        setAnimationState('dying');
+      } else if (isConnected && !previousConnection) {
+        // Coming back online - start reviving animation
+        setAnimationState('reviving');
+      }
+      setPreviousConnection(isConnected);
+    }
+  }, [isConnected, previousConnection]);
+
+  // Color transition animation
+  useEffect(() => {
+    Animated.timing(colorAnim, {
+      toValue: isConnected ? 1 : 0,
+      duration: 1000,
+      useNativeDriver: false,
+    }).start();
+  }, [isConnected]);
+
+  // Main heartbeat animation logic
+  useEffect(() => {
+    if (animationRef.current) {
+      animationRef.current.stop();
+    }
+
+    const normalHeartbeat = () => {
+      const sequence = Animated.sequence([
         Animated.timing(heartbeatAnim, {
           toValue: 1.4,
           duration: 150,
@@ -60,15 +92,159 @@ const HeartbeatDot = ({ isConnected }) => {
           duration: 100,
           useNativeDriver: true,
         }),
-        Animated.delay(800), // Pause between heartbeats
-      ]).start(() => heartbeat());
+        Animated.delay(800),
+      ]);
+      
+      animationRef.current = sequence;
+      sequence.start(() => {
+        if (animationState === 'normal') {
+          normalHeartbeat();
+        }
+      });
     };
-    heartbeat();
-  }, []);
 
-  const colors = isConnected 
-    ? ['#B383FF', '#C5AFFF', '#9B74FF']
-    : ['#FF6B6B', '#FF8E8E', '#FF4757'];
+    const dyingAnimation = () => {
+      // 2 quick beeps, then 2 slow beeps, then stop
+      const sequence = Animated.sequence([
+        // First quick beep
+        Animated.timing(heartbeatAnim, {
+          toValue: 1.3,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartbeatAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.delay(200),
+        // Second quick beep
+        Animated.timing(heartbeatAnim, {
+          toValue: 1.3,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartbeatAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.delay(500),
+        // First slow beep
+        Animated.timing(heartbeatAnim, {
+          toValue: 1.2,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartbeatAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.delay(800),
+        // Second slow beep
+        Animated.timing(heartbeatAnim, {
+          toValue: 1.1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartbeatAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]);
+      
+      animationRef.current = sequence;
+      sequence.start(() => {
+        setAnimationState('dead');
+      });
+    };
+
+    const revivingAnimation = () => {
+      // Slow beeps getting faster, then normal
+      const sequence = Animated.sequence([
+        // Very slow beep
+        Animated.timing(heartbeatAnim, {
+          toValue: 1.1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartbeatAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.delay(600),
+        // Medium slow beep
+        Animated.timing(heartbeatAnim, {
+          toValue: 1.2,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartbeatAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.delay(400),
+        // Getting faster
+        Animated.timing(heartbeatAnim, {
+          toValue: 1.3,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartbeatAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.delay(300),
+      ]);
+      
+      animationRef.current = sequence;
+      sequence.start(() => {
+        setAnimationState('normal');
+      });
+    };
+
+    switch (animationState) {
+      case 'normal':
+        normalHeartbeat();
+        break;
+      case 'dying':
+        dyingAnimation();
+        break;
+      case 'reviving':
+        revivingAnimation();
+        break;
+      case 'dead':
+        // No animation when dead
+        break;
+    }
+
+    return () => {
+      if (animationRef.current) {
+        animationRef.current.stop();
+      }
+    };
+  }, [animationState]);
+
+  // Interpolate colors based on connection state
+  const interpolatedColors = [
+    colorAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['#FF6B6B', '#B383FF'],
+    }),
+    colorAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['#FF8E8E', '#C5AFFF'],
+    }),
+    colorAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['#FF4757', '#9B74FF'],
+    }),
+  ];
 
   return (
     <Animated.View
@@ -82,7 +258,7 @@ const HeartbeatDot = ({ isConnected }) => {
       ]}
     >
       <LinearGradient
-        colors={colors}
+        colors={interpolatedColors}
         style={{
           width: 20,
           height: 20,
