@@ -231,20 +231,10 @@ const HeartbeatDot = ({ isConnected }) => {
   }, [animationState]);
 
   // Interpolate colors based on connection state
-  const interpolatedColors = [
-    colorAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['#FF6B6B', '#B383FF'],
-    }),
-    colorAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['#FF8E8E', '#C5AFFF'],
-    }),
-    colorAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['#FF4757', '#9B74FF'],
-    }),
-  ];
+  const backgroundColor = colorAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#FF6B6B', '#B383FF'],
+  });
 
   return (
     <Animated.View
@@ -253,19 +243,16 @@ const HeartbeatDot = ({ isConnected }) => {
           width: 20,
           height: 20,
           borderRadius: 10,
+          backgroundColor: backgroundColor,
           transform: [{ scale: heartbeatAnim }],
+          shadowColor: isConnected ? '#B383FF' : '#FF6B6B',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.6,
+          shadowRadius: 4,
+          elevation: 4,
         }
       ]}
-    >
-      <LinearGradient
-        colors={interpolatedColors}
-        style={{
-          width: 20,
-          height: 20,
-          borderRadius: 10,
-        }}
-      />
-    </Animated.View>
+    />
   );
 };
 
