@@ -35,7 +35,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const HeartbeatDot = ({ isConnected }) => {
+const HeartbeatDot = ({ isConnected, animationsEnabled = true }) => {
   const heartbeatAnim = useRef(new Animated.Value(1)).current;
   const colorAnim = useRef(new Animated.Value(1)).current; // 1 = online, 0 = offline
   const [animationState, setAnimationState] = useState('normal'); // normal, dying, dead, reviving
@@ -103,6 +103,12 @@ const HeartbeatDot = ({ isConnected }) => {
     }
 
     const normalHeartbeat = () => {
+      // Skip animations if disabled
+      if (!animationsEnabled) {
+        heartbeatAnim.setValue(1);
+        return;
+      }
+
       // Double check we're still connected and in normal state
       if (!isConnected || animationState !== 'normal') {
         console.log('Stopping normal heartbeat - not connected or wrong state');
@@ -149,9 +155,9 @@ const HeartbeatDot = ({ isConnected }) => {
         // Clear the ref when animation completes or stops
         animationRef.current = null;
         // Only continue if animation completed naturally AND we're still connected and in normal state
-        if (finished && animationState === 'normal' && isConnected) {
+        if (finished && animationState === 'normal' && isConnected && animationsEnabled) {
           // Double check one more time before recursing
-          if (isConnected && animationState === 'normal') {
+          if (isConnected && animationState === 'normal' && animationsEnabled) {
             normalHeartbeat();
           } else {
             console.log('Connection lost during heartbeat, stopping');
@@ -163,6 +169,12 @@ const HeartbeatDot = ({ isConnected }) => {
     };
 
     const dyingAnimation = () => {
+      // Skip animations if disabled
+      if (!animationsEnabled) {
+        setAnimationState('dead');
+        return;
+      }
+
       // 2 quick beeps, then 2 slow beeps, then stop
       const sequence = Animated.sequence([
         // First quick beep
@@ -227,6 +239,12 @@ const HeartbeatDot = ({ isConnected }) => {
     };
 
     const revivingAnimation = () => {
+      // Skip animations if disabled
+      if (!animationsEnabled) {
+        setAnimationState('normal');
+        return;
+      }
+
       // Slow beeps getting faster, then normal
       const sequence = Animated.sequence([
         // Very slow beep
@@ -586,22 +604,35 @@ export default function App() {
 
   const playNotificationSound = async () => {
     try {
-      // Apply vibration setting
+      // Apply vibration setting for 8 seconds like an alarm
       if (settings.vibration) {
-        Vibration.vibrate([0, 250, 250, 250]);
+        // Continuous vibration pattern for 8 seconds (8000ms)
+        const vibrationPattern = [];
+        for (let i = 0; i < 32; i++) { // 32 cycles of 250ms vibrate/pause = 8 seconds
+          vibrationPattern.push(250, 250);
+        }
+        Vibration.vibrate(vibrationPattern);
       }
 
-      const { sound } = await Audio.Sound.createAsync(
-        require('./Sound.ogg'),
-        { shouldPlay: true, volume: 0.8 }
-      );
-      setSound(sound);
+      // Play notification sound based on user preference
+      if (settings.notificationSound === 'custom') {
+        // For custom sound, we rely on device's default notification sound
+        // The actual custom file selection would be handled by the OS
+        console.log('Using device custom notification sound');
+      } else {
+        // Play default app sound
+        const { sound } = await Audio.Sound.createAsync(
+          require('./Sound.ogg'),
+          { shouldPlay: true, volume: 0.8 }
+        );
+        setSound(sound);
 
-      setTimeout(async () => {
-        if (sound) {
-          await sound.unloadAsync();
-        }
-      }, 3000);
+        setTimeout(async () => {
+          if (sound) {
+            await sound.unloadAsync();
+          }
+        }, 8000); // 8 seconds duration
+      }
     } catch (error) {
       console.log('Could not play notification sound:', error);
     }
@@ -757,7 +788,7 @@ export default function App() {
   };
 
   const openTelegramChannel = () => {
-    Linking.openURL('https://t.me/PrototypeOff');
+    Linking.openURL('https://t.me/PrototypeGifts');
   };
 
   const handleSettingsChange = (newSettings) => {
@@ -893,7 +924,7 @@ export default function App() {
                       shadowColor: isConnected ? '#C5AFFF' : '#FF6B6B'
                     }
                   ]} />
-                  <HeartbeatDot isConnected={isConnected} />
+                  <HeartbeatDot isConnected={isConnected} animationsEnabled={settings.animations} />
                 </View>
               </View>
 
@@ -1136,11 +1167,13 @@ const getStyles = (settings) => StyleSheet.create({
     borderWidth: 1,
     borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.15)' : 'rgba(108, 117, 125, 0.15)',
     backdropFilter: 'blur(20px)',
-    shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 10,
+    ...(settings.animations && {
+      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 10,
+    }),
   },
   cardHeader: {
     flexDirection: 'row',
@@ -1262,23 +1295,27 @@ const getStyles = (settings) => StyleSheet.create({
     borderRadius: 20,
     marginBottom: 16,
     overflow: 'hidden',
-    shadowColor: 'rgba(179, 131, 255, 0.4)',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 10,
+    ...(settings.animations && {
+      shadowColor: 'rgba(179, 131, 255, 0.4)',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.4,
+      shadowRadius: 16,
+      elevation: 10,
+    }),
   },
   secondaryButton: {
-    backgroundColor: 'rgba(20, 15, 35, 0.8)',
+    backgroundColor: settings.darkMode ? 'rgba(20, 15, 35, 0.8)' : 'rgba(108, 117, 125, 0.1)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(197, 175, 255, 0.3)',
+    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
     backdropFilter: 'blur(10px)',
-    shadowColor: 'rgba(197, 175, 255, 0.2)',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
+    ...(settings.animations && {
+      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(108, 117, 125, 0.2)',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.25,
+      shadowRadius: 12,
+      elevation: 8,
+    }),
   },
   buttonGradient: {
     paddingVertical: 20,
@@ -1311,7 +1348,7 @@ const getStyles = (settings) => StyleSheet.create({
   secondaryButtonText: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#C5AFFF',
+    color: settings.darkMode ? '#C5AFFF' : '#495057',
     letterSpacing: 0.5,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
@@ -1324,11 +1361,13 @@ const getStyles = (settings) => StyleSheet.create({
     borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.15)' : 'rgba(108, 117, 125, 0.15)',
     backdropFilter: 'blur(20px)',
     minHeight: 300,
-    shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 10,
+    ...(settings.animations && {
+      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 10,
+    }),
   },
   notificationsListContainer: {
     flex: 1,
@@ -1350,13 +1389,15 @@ const getStyles = (settings) => StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: settings.darkMode ? 'rgba(197, 175, 255, 0.8)' : 'rgba(108, 117, 125, 0.8)',
     backdropFilter: 'blur(10px)',
-    shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(108, 117, 125, 0.2)',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
     borderWidth: 1,
     borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.1)' : 'rgba(108, 117, 125, 0.1)',
+    ...(settings.animations && {
+      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(108, 117, 125, 0.2)',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.4,
+      shadowRadius: 12,
+      elevation: 8,
+    }),
   },
   notificationHeader: {
     flexDirection: 'row',

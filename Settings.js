@@ -1,66 +1,61 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Platform, Alert, Vibration } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Platform, Alert, Vibration, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Device from 'expo-device';
 
-const AnimatedIcon = ({ name, color, size, isEnabled, style }) => {
+const AnimatedIcon = ({ name, color, size, isEnabled, style, animationsEnabled = true }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 1.3,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    Animated.timing(rotateAnim, {
-      toValue: isEnabled ? 1 : 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [isEnabled]);
-
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
+    if (animationsEnabled) {
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [isEnabled, animationsEnabled]);
 
   return (
-    <Animated.View style={[style, { transform: [{ scale: scaleAnim }, { rotate }] }]}>
+    <Animated.View style={[style, { transform: animationsEnabled ? [{ scale: scaleAnim }] : [] }]}>
       <Ionicons name={name} size={size} color={color} />
     </Animated.View>
   );
 };
 
-const SettingToggle = ({ title, description, isEnabled, onToggle, iconName, children }) => {
+const SettingToggle = ({ title, description, isEnabled, onToggle, iconName, children, animationsEnabled = true }) => {
   const slideAnim = useRef(new Animated.Value(isEnabled ? 1 : 0)).current;
   const backgroundColorAnim = useRef(new Animated.Value(isEnabled ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: isEnabled ? 1 : 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(backgroundColorAnim, {
-        toValue: isEnabled ? 1 : 0,
-        duration: 250,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  }, [isEnabled]);
+    if (animationsEnabled) {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: isEnabled ? 1 : 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(backgroundColorAnim, {
+          toValue: isEnabled ? 1 : 0,
+          duration: 250,
+          useNativeDriver: false,
+        }),
+      ]).start();
+    } else {
+      slideAnim.setValue(isEnabled ? 1 : 0);
+      backgroundColorAnim.setValue(isEnabled ? 1 : 0);
+    }
+  }, [isEnabled, animationsEnabled]);
 
   const translateX = slideAnim.interpolate({
     inputRange: [0, 1],
@@ -88,6 +83,7 @@ const SettingToggle = ({ title, description, isEnabled, onToggle, iconName, chil
               color={isEnabled ? '#B383FF' : '#9090A0'} 
               isEnabled={isEnabled}
               style={styles.settingIcon}
+              animationsEnabled={animationsEnabled}
             />
             <Text style={styles.settingTitle}>{title}</Text>
           </View>
@@ -104,7 +100,7 @@ const SettingToggle = ({ title, description, isEnabled, onToggle, iconName, chil
                 styles.toggleThumb, 
                 { 
                   backgroundColor: thumbColor,
-                  transform: [{ translateX }] 
+                  transform: animationsEnabled ? [{ translateX }] : [{ translateX: isEnabled ? 22 : 2 }] 
                 }
               ]} 
             />
@@ -204,7 +200,7 @@ const SoundSelector = ({ selectedSound, onSoundChange }) => {
   );
 };
 
-const SecuritySection = ({ onDeviceManagement, onPrivacyPolicy, onClearData }) => {
+const SecuritySection = ({ onDeviceManagement, onClearData }) => {
   return (
     <View style={styles.securityContainer}>
       <View style={styles.sectionHeader}>
@@ -216,14 +212,6 @@ const SecuritySection = ({ onDeviceManagement, onPrivacyPolicy, onClearData }) =
         <View style={styles.securityOptionContent}>
           <Ionicons name="phone-portrait" size={18} color="#C5AFFF" />
           <Text style={styles.securityOptionText}>Device Registration</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={16} color="#9090A0" />
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.securityOption} onPress={onPrivacyPolicy}>
-        <View style={styles.securityOptionContent}>
-          <Ionicons name="document-text" size={18} color="#C5AFFF" />
-          <Text style={styles.securityOptionText}>Privacy Policy</Text>
         </View>
         <Ionicons name="chevron-forward" size={16} color="#9090A0" />
       </TouchableOpacity>
@@ -336,43 +324,14 @@ export default function Settings({ visible, onClose, onSettingsChange }) {
     }
   };
 
-  const handlePrivacyPolicy = () => {
-    Alert.alert(
-      '📋 Privacy Policy',
-      'TGift Privacy Policy\n\n' +
-      '• We only collect necessary data for gift notifications\n' +
-      '• No personal data is shared with third parties\n' +
-      '• Device tokens are used only for push notifications\n' +
-      '• Cached notifications are stored locally on your device\n' +
-      '• You can clear all data at any time\n\n' +
-      'For questions, contact: support@tgift.app',
-      [
-        { text: 'Accept & Continue' },
-        { 
-          text: 'View Full Policy', 
-          onPress: () => {
-            Alert.alert(
-              'Full Privacy Policy',
-              'Data Collection: We collect minimal data required for app functionality including device tokens for notifications and cached message data.\n\n' +
-              'Data Usage: Data is used solely for delivering gift notifications and improving app performance.\n\n' +
-              'Data Storage: All data is stored locally on your device or in secure cloud storage with encryption.\n\n' +
-              'Data Sharing: We do not sell, trade, or share your data with third parties.\n\n' +
-              'Your Rights: You can delete all data at any time using the Clear All Data option.'
-            );
-          }
-        }
-      ]
-    );
-  };
-
   const handleClearData = () => {
     Alert.alert(
       '🗑️ Clear All Data',
-      'This will permanently remove:\n\n• All cached notifications\n• App settings and preferences\n• Registered device information\n• Any stored user data\n\nThis action cannot be undone.',
+      'This will reset the app to its default state:\n\n• All cached notifications will be removed\n• App settings will be reset to defaults\n• Device registration will be cleared\n\nThis action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'Clear Everything', 
+          text: 'Reset App', 
           style: 'destructive',
           onPress: async () => {
             try {
@@ -392,8 +351,8 @@ export default function Settings({ visible, onClose, onSettingsChange }) {
               setSettings(defaultSettings);
               
               Alert.alert(
-                '✅ Data Cleared', 
-                'All data has been successfully cleared. The app will restart with default settings.',
+                '✅ App Reset Complete', 
+                'The app has been reset to its default state successfully.',
                 [
                   {
                     text: 'OK',
@@ -408,7 +367,7 @@ export default function Settings({ visible, onClose, onSettingsChange }) {
                 ]
               );
             } catch (error) {
-              Alert.alert('❌ Error', 'Failed to clear data. Please try again.');
+              Alert.alert('❌ Error', 'Failed to reset app data. Please try again.');
               console.error('Clear data error:', error);
             }
           }
@@ -460,6 +419,7 @@ export default function Settings({ visible, onClose, onSettingsChange }) {
                 isEnabled={settings.vibration}
                 onToggle={() => updateSetting('vibration', !settings.vibration)}
                 iconName={settings.vibration ? "phone-portrait" : "phone-portrait-outline"}
+                animationsEnabled={settings.animations}
               />
 
               <View style={styles.settingContainer}>
@@ -492,6 +452,7 @@ export default function Settings({ visible, onClose, onSettingsChange }) {
                 isEnabled={settings.darkMode}
                 onToggle={() => updateSetting('darkMode', !settings.darkMode)}
                 iconName={settings.darkMode ? "moon" : "sunny"}
+                animationsEnabled={settings.animations}
               />
 
               <SettingToggle
@@ -500,6 +461,7 @@ export default function Settings({ visible, onClose, onSettingsChange }) {
                 isEnabled={settings.animations}
                 onToggle={() => updateSetting('animations', !settings.animations)}
                 iconName={settings.animations ? "play-circle" : "pause-circle"}
+                animationsEnabled={settings.animations}
               />
 
               <View style={styles.fontSizeContainer}>
@@ -513,7 +475,6 @@ export default function Settings({ visible, onClose, onSettingsChange }) {
             {/* Security & Privacy */}
             <SecuritySection 
               onDeviceManagement={handleDeviceManagement}
-              onPrivacyPolicy={handlePrivacyPolicy}
               onClearData={handleClearData}
             />
 
@@ -526,7 +487,15 @@ export default function Settings({ visible, onClose, onSettingsChange }) {
               <View style={styles.infoContainer}>
                 <Text style={styles.infoText}>TGift v1.0.0</Text>
                 <Text style={styles.infoSubtext}>Gift Detection & Alert System</Text>
-                <Text style={styles.infoSubtext}>Built with ❤️ for the community</Text>
+                <TouchableOpacity 
+                  style={styles.telegramChannelButton}
+                  onPress={() => Linking.openURL('https://t.me/PrototypeGifts')}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="paper-plane" size={16} color="#B383FF" style={styles.telegramIcon} />
+                  <Text style={styles.telegramChannelText}>Our Official Telegram Channel @PrototypeGifts</Text>
+                </TouchableOpacity>
+                <Text style={styles.infoSubtext}>Built with <Ionicons name="code-slash" size={14} color="#B383FF" /> for the community</Text>
               </View>
             </View>
           </ScrollView>
@@ -819,5 +788,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#B0B0C0',
     marginBottom: 2,
+  },
+  telegramChannelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(179, 131, 255, 0.15)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(179, 131, 255, 0.3)',
+    marginVertical: 8,
+  },
+  telegramIcon: {
+    marginRight: 8,
+  },
+  telegramChannelText: {
+    fontSize: 14,
+    color: '#B383FF',
+    fontWeight: '600',
+    flex: 1,
   },
 });
