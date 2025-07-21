@@ -268,7 +268,7 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
         setSettings(prev => ({ ...prev, ...parsed }));
       }
     } catch (error) {
-      console.log('Failed to load settings:', error);
+      console.error('Failed to load settings:', error);
     }
   };
 
@@ -278,7 +278,8 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
       setSettings(newSettings);
       onSettingsChange?.(newSettings);
     } catch (error) {
-      console.log('Failed to save settings:', error);
+      console.error('Failed to save settings:', error);
+      Alert.alert('Error', 'Failed to save settings. Please try again.');
     }
   };
 

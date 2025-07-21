@@ -481,7 +481,7 @@ export default function App() {
       }
       return [];
     } catch (error) {
-      console.log('Failed to load cached notifications:', error);
+      console.error('Failed to load cached notifications:', error);
       return [];
     }
   };
@@ -498,14 +498,19 @@ export default function App() {
   const checkBackendStatus = async () => {
     try {
       console.log('Checking backend status at:', `${BACKEND_BASE_URL}/status`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       const response = await fetch(`${BACKEND_BASE_URL}/status`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       console.log('Status response:', response.status, response.statusText);
 
       if (response.ok) {
@@ -521,14 +526,27 @@ export default function App() {
       }
     } catch (error) {
       setIsConnected(false);
-      setBackendStatus('Connection Failed');
-      console.error('Backend status check failed:', error);
+      if (error.name === 'AbortError') {
+        setBackendStatus('Connection Timeout');
+        console.error('Backend status check timeout');
+      } else {
+        setBackendStatus('Connection Failed');
+        console.error('Backend status check failed:', error);
+      }
     }
   };
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch(`${BACKEND_BASE_URL}/notifications`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+      
+      const response = await fetch(`${BACKEND_BASE_URL}/notifications`, {
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
         const data = await response.json();
         if (data.notifications && data.notifications.length > 0) {
@@ -569,9 +587,15 @@ export default function App() {
           // No new notifications from server, keep existing cached ones
           console.log('No new notifications from server');
         }
+      } else {
+        console.error('Failed to fetch notifications:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+      if (error.name === 'AbortError') {
+        console.error('Fetch notifications timeout');
+      } else {
+        console.error('Failed to fetch notifications:', error);
+      }
     }
   };
 
@@ -606,17 +630,25 @@ export default function App() {
     try {
       // Apply vibration setting for 8 seconds like an alarm
       if (settings.vibration) {
-        // Continuous vibration pattern for 8 seconds (8000ms)
-        const vibrationPattern = [];
-        for (let i = 0; i < 16; i++) { // 16 cycles of 500ms vibrate = 8 seconds
-          vibrationPattern.push(500);
-        }
-        Vibration.vibrate(vibrationPattern, true); // true for repeat until stopped
+        try {
+          // Continuous vibration pattern for 8 seconds (8000ms)
+          const vibrationPattern = [];
+          for (let i = 0; i < 16; i++) { // 16 cycles of 500ms vibrate = 8 seconds
+            vibrationPattern.push(500);
+          }
+          Vibration.vibrate(vibrationPattern, true); // true for repeat until stopped
 
-        // Stop vibration after 8 seconds
-        setTimeout(() => {
-          Vibration.cancel();
-        }, 8000);
+          // Stop vibration after 8 seconds
+          setTimeout(() => {
+            try {
+              Vibration.cancel();
+            } catch (cancelError) {
+              console.error('Failed to cancel vibration:', cancelError);
+            }
+          }, 8000);
+        } catch (vibrationError) {
+          console.error('Failed to vibrate device:', vibrationError);
+        }
       }
 
       // Play notification sound based on user preference
@@ -627,24 +659,28 @@ export default function App() {
       } else {
         // Play default app sound
         try {
-          const { sound } = await Audio.Sound.createAsync(
+          const { sound: newSound } = await Audio.Sound.createAsync(
             require('./LongSound.ogg'),
             { shouldPlay: true, volume: 0.8 }
           );
-          setSound(sound);
+          setSound(newSound);
+
+          setTimeout(async () => {
+            try {
+              if (newSound) {
+                await newSound.unloadAsync();
+              }
+            } catch (unloadError) {
+              console.error('Failed to unload sound:', unloadError);
+            }
+          }, 8000); // 8 seconds duration
         } catch (soundError) {
-          console.log('Failed to load sound file, using system notification sound');
+          console.error('Failed to load sound file:', soundError);
           // Fallback to system notification sound if file loading fails
         }
-
-        setTimeout(async () => {
-          if (sound) {
-            await sound.unloadAsync();
-          }
-        }, 8000); // 8 seconds duration
       }
     } catch (error) {
-      console.log('Could not play notification sound:', error);
+      console.error('Could not play notification sound:', error);
     }
   };
 
@@ -659,13 +695,19 @@ export default function App() {
         channel_id: "-1002417640134"
       };
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch(`${BACKEND_BASE_URL}/notify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(testData)
+        body: JSON.stringify(testData),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         await playNotificationSound();
@@ -679,11 +721,19 @@ export default function App() {
           fetchNotifications();
         }, 1000);
       } else {
-        const errorData = await response.json();
-        Alert.alert('❌ Error', `Failed to send: ${errorData.detail || 'Unknown error'}`);
+        try {
+          const errorData = await response.json();
+          Alert.alert('❌ Error', `Failed to send: ${errorData.detail || 'Unknown error'}`);
+        } catch (parseError) {
+          Alert.alert('❌ Error', `Server error: ${response.status} ${response.statusText}`);
+        }
       }
     } catch (error) {
-      Alert.alert('❌ Network Error', 'Could not connect to backend');
+      if (error.name === 'AbortError') {
+        Alert.alert('❌ Timeout', 'Request timed out. Please check your connection.');
+      } else {
+        Alert.alert('❌ Network Error', 'Could not connect to backend');
+      }
       console.error('Test notification error:', error);
     }
     setTestButtonLoading(false);
@@ -691,7 +741,10 @@ export default function App() {
 
   const registerDeviceWithBackend = async (pushToken) => {
     try {
-      if (pushToken && !pushToken.includes('dev') && !pushToken.includes('simulator') && !pushToken.includes('web')) {
+      if (pushToken && !pushToken.includes('dev') && !pushToken.includes('simulator') && !pushToken.includes('web') && !pushToken.includes('failed')) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
         const response = await fetch(`${BACKEND_BASE_URL}/register-device`, {
           method: 'POST',
           headers: {
@@ -700,19 +753,26 @@ export default function App() {
           body: JSON.stringify({
             expo_push_token: pushToken,
             device_id: Device.modelName || 'unknown-device'
-          })
+          }),
+          signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           console.log('✅ Device successfully registered with backend for push notifications');
         } else {
-          console.log('⚠️ Failed to register device with backend:', response.status);
+          console.error('⚠️ Failed to register device with backend:', response.status, response.statusText);
         }
       } else {
-        console.log('⚠️ Skipping backend registration - development mode token');
+        console.log('⚠️ Skipping backend registration - development mode token or invalid token:', pushToken);
       }
     } catch (error) {
-      console.error('❌ Error registering device with backend:', error);
+      if (error.name === 'AbortError') {
+        console.error('❌ Device registration timeout');
+      } else {
+        console.error('❌ Error registering device with backend:', error);
+      }
     }
   };
 
@@ -734,10 +794,12 @@ export default function App() {
 
   async function registerForPushNotificationsAsync() {
     if (!Device.isDevice && Platform.OS !== 'web') {
+      console.log('Not a physical device, returning simulator token');
       return 'simulator-token';
     }
 
     if (Platform.OS === 'web') {
+      console.log('Web platform, returning web dev token');
       return 'web-dev-token';
     }
 
@@ -746,34 +808,53 @@ export default function App() {
       let finalStatus = existingStatus;
 
       if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
+        try {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        } catch (permissionError) {
+          console.error('Failed to request notification permissions:', permissionError);
+          return 'permission-request-failed';
+        }
       }
 
       if (finalStatus !== 'granted') {
+        console.log('Notification permissions not granted:', finalStatus);
         return 'no-permissions';
       }
 
       if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-          name: 'TGift Notifications',
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#8088fc',
-          sound: true,
-          enableLights: true,
-          enableVibrate: true,
-        });
+        try {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'TGift Notifications',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#8088fc',
+            sound: true,
+            enableLights: true,
+            enableVibrate: true,
+          });
+        } catch (channelError) {
+          console.error('Failed to set notification channel:', channelError);
+          // Continue anyway, this isn't critical
+        }
       }
 
       const projectId = Constants.expoConfig?.extra?.eas?.projectId;
       if (!projectId || projectId === 'your-project-id-here') {
+        console.log('No valid project ID found, using dev mode');
         return 'dev-mode-active';
       }
 
-      const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-      return token;
+      try {
+        const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+        console.log('Successfully obtained push token');
+        return tokenData.data;
+      } catch (tokenError) {
+        console.error('Failed to get Expo push token:', tokenError);
+        return 'token-generation-failed';
+      }
     } catch (error) {
+      console.error('Unexpected error in registerForPushNotificationsAsync:', error);
       return 'fallback-mode';
     }
   }

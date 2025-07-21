@@ -14,14 +14,12 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "expo": {
-      "assetFileExtensions": [
-        "ogg",
-        "mp3",
-        "wav",
-        "m4a"
-      ]
-    },
+    "assetFileExtensions": [
+      "ogg",
+      "mp3",
+      "wav",
+      "m4a"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -43,7 +41,9 @@
       [
         "expo-notifications",
         {
-          "color": "#B23AC7"
+          "icon": "./assets/notification-icon.png",
+          "color": "#B383FF",
+          "defaultChannel": "default"
         }
       ]
     ],
