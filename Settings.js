@@ -499,17 +499,19 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
                 <Text style={styles.sectionTitle}>About</Text>
               </View>
               <View style={styles.infoContainer}>
-                <Text style={styles.infoText}>TGift v1.0.0</Text>
+                <Text style={styles.infoText}>Prototype-G v1.0.0</Text>
                 <Text style={styles.infoSubtext}>Gift Detection & Alert System</Text>
-                <TouchableOpacity 
-                  style={styles.telegramChannelButton}
-                  onPress={() => Linking.openURL('https://t.me/PrototypeGifts')}
-                  activeOpacity={0.8}
-                >
+                <View style={styles.telegramChannelContainer}>
                   <Ionicons name="paper-plane" size={16} color="#B383FF" style={styles.telegramIcon} />
-                  <Text style={styles.telegramChannelText}>Our Official Telegram Channel @PrototypeGifts</Text>
-                </TouchableOpacity>
-                <Text style={styles.infoSubtext}>Built with <Ionicons name="code-slash" size={14} color="#B383FF" /> for the community</Text>
+                  <Text style={styles.telegramChannelText}>Our Official Telegram Channel </Text>
+                  <TouchableOpacity 
+                    onPress={() => Linking.openURL('https://t.me/PrototypeGifts')}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.telegramChannelLink}>@PrototypeGifts</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.infoSubtext}>Made with JavaScript And Hope</Text>
               </View>
             </View>
           </ScrollView>
@@ -803,7 +805,7 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
     color: settingsTheme.darkMode ? '#B0B0C0' : '#495057',
     marginBottom: 2,
   },
-  telegramChannelButton: {
+  telegramChannelContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
@@ -813,14 +815,20 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(179, 131, 255, 0.3)',
     marginVertical: 8,
+    flexWrap: 'wrap',
   },
   telegramIcon: {
     marginRight: 8,
   },
   telegramChannelText: {
     fontSize: 14,
+    color: settingsTheme.darkMode ? '#FFFFFF' : '#1A1A1A',
+    fontWeight: '600',
+  },
+  telegramChannelLink: {
+    fontSize: 14,
     color: '#B383FF',
     fontWeight: '600',
-    flex: 1,
+    textDecorationLine: 'underline',
   },
 });

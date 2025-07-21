@@ -401,7 +401,7 @@ export default function App() {
     loadBackendURL().then(async () => {
       // Load settings
       await loadSettings();
-      
+
       // Load cached notifications first to show immediately
       const cachedNotifications = await loadCachedNotifications();
       console.log('App initialized with cached notifications:', cachedNotifications.length);
@@ -612,7 +612,7 @@ export default function App() {
           vibrationPattern.push(500);
         }
         Vibration.vibrate(vibrationPattern, true); // true for repeat until stopped
-        
+
         // Stop vibration after 8 seconds
         setTimeout(() => {
           Vibration.cancel();
@@ -875,34 +875,45 @@ export default function App() {
         >
           <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
             {/* Header */}
-            <View style={styles.header}>
-              <View style={styles.headerTop}>
-                <View style={styles.headerTitleContainer}>
-                  <Ionicons name="gift" size={22} color="#8088fc" style={styles.headerIcon} />
-                  <Text style={styles.headerTitle}>TGift</Text>
-              </View>
-              <View style={styles.headerRight}>
-                <TouchableOpacity 
-                  style={styles.settingsButton} 
-                  onPress={() => setShowSettings(true)}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="settings" size={20} color="#FFFFFF" />
-                </TouchableOpacity>
-                <StatusIndicator connected={isConnected} />
-              </View>
-              </View>
-              <Text style={styles.headerSubtitle}>Gift Detection & Alert System</Text>
-              <View style={styles.connectionStatusContainer}>
-                <Ionicons 
-                  name={isConnected ? "checkmark-circle" : "close-circle"} 
-                  size={12} 
-                  color={isConnected ? "#4CAF50" : "#FF6B6B"} 
-                  style={styles.connectionStatusIcon} 
-                />
-                <Text style={styles.connectionStatus}>{backendStatus}</Text>
-              </View>
+          <View style={styles.header}>
+            <View style={styles.headerTop}>
+              <View style={styles.headerTitleContainer}>
+                <View style={styles.headerIconContainer}>
+                  {/* Using icon.png instead of Ionicons gift */}
+                  <View style={styles.customIcon} />
+                </View>
+                <View style={styles.headerTextContainer}>
+                  <Text style={styles.headerTitle}>Prototype-G</Text>
+                  <LinearGradient
+                    colors={['#B383FF', '#9B74FF', '#8088fc']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.gradientLine}
+                  />
+                  <Text style={styles.systemText}>Gift Alert System</Text>
+                </View>
             </View>
+            <View style={styles.headerRight}>
+              <TouchableOpacity 
+                style={styles.settingsButton} 
+                onPress={() => setShowSettings(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="settings" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+              <StatusIndicator connected={isConnected} />
+            </View>
+            </View>
+            <View style={styles.connectionStatusContainer}>
+              <Ionicons 
+                name={isConnected ? "checkmark-circle" : "close-circle"} 
+                size={12} 
+                color={isConnected ? "#4CAF50" : "#FF6B6B"} 
+                style={styles.connectionStatusIcon} 
+              />
+              <Text style={styles.connectionStatus}>{backendStatus}</Text>
+            </View>
+          </View>
 
             {/* Main Content */}
             <View style={styles.mainContent}>
@@ -1066,6 +1077,25 @@ const getStyles = (settings) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+    headerIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(179, 131, 255, 0.15)', // Example background
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  customIcon: {
+    width: 24,
+    height: 24,
+    backgroundColor: '#8088fc', // Placeholder for the icon
+    borderRadius: 4,
+  },
+  headerTextContainer: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
   headerIcon: {
     marginRight: 8,
     color: '#C5AFFF',
@@ -1078,6 +1108,19 @@ const getStyles = (settings) => StyleSheet.create({
     textShadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  gradientLine: {
+    height: 3,
+    width: '100%',
+    marginTop: 2,
+    marginBottom: 2,
+  },
+  systemText: {
+    fontSize: 12 + settings.fontSize,
+    color: settings.darkMode ? '#B0B0C0' : '#495057',
+    fontWeight: '600',
+    letterSpacing: 0.5,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   headerSubtitle: {
