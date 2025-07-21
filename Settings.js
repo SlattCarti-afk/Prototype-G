@@ -147,40 +147,58 @@ const FontSizeSlider = ({ value, onValueChange }) => {
 };
 
 const SoundSelector = ({ selectedSound, onSoundChange }) => {
-  const sounds = [
-    { name: 'Default', file: 'default', icon: 'musical-notes' },
-    { name: 'Bell Chime', file: 'bell', icon: 'notifications' },
-    { name: 'Digital Alert', file: 'digital', icon: 'radio' },
-    { name: 'Gentle Tone', file: 'gentle', icon: 'heart' },
-  ];
+  const handleCustomSoundSelection = () => {
+    Alert.alert(
+      '🎵 Custom Ringtone',
+      'To use a custom ringtone:\n\n1. Place your audio file in your device storage\n2. Go to your device Settings > Sounds & Haptics > Ringtone\n3. Select your custom audio file\n4. This app will use your device\'s notification sound setting',
+      [
+        { text: 'OK' },
+        { 
+          text: 'Use Default', 
+          onPress: () => onSoundChange('default')
+        }
+      ]
+    );
+  };
 
   return (
     <View style={styles.soundContainer}>
       <Text style={styles.soundLabel}>Notification Sound</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.soundScroll}>
-        {sounds.map((sound, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.soundOption,
-              selectedSound === sound.file && styles.soundOptionActive,
-            ]}
-            onPress={() => onSoundChange(sound.file)}
-          >
-            <Ionicons 
-              name={sound.icon} 
-              size={24} 
-              color={selectedSound === sound.file ? '#FFFFFF' : '#B383FF'} 
-            />
-            <Text style={[
-              styles.soundOptionText,
-              selectedSound === sound.file && styles.soundOptionTextActive,
-            ]}>
-              {sound.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <View style={styles.soundOptionsContainer}>
+        <TouchableOpacity
+          style={[
+            styles.soundOption,
+            selectedSound === 'default' && styles.soundOptionActive,
+          ]}
+          onPress={() => onSoundChange('default')}
+        >
+          <Ionicons 
+            name="musical-notes" 
+            size={24} 
+            color={selectedSound === 'default' ? '#FFFFFF' : '#B383FF'} 
+          />
+          <Text style={[
+            styles.soundOptionText,
+            selectedSound === 'default' && styles.soundOptionTextActive,
+          ]}>
+            Default
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={styles.customSoundOption}
+          onPress={handleCustomSoundSelection}
+        >
+          <Ionicons 
+            name="folder-open" 
+            size={24} 
+            color="#B383FF" 
+          />
+          <Text style={styles.customSoundOptionText}>
+            Custom Ringtone
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -270,44 +288,127 @@ export default function Settings({ visible, onClose, onSettingsChange }) {
     saveSettings(newSettings);
   };
 
-  const handleDeviceManagement = () => {
-    Alert.alert(
-      '🔐 Device Registration',
-      'This feature will be available soon. You will be able to manage your registered devices and access keys here.',
-      [{ text: 'OK' }]
-    );
+  const handleDeviceManagement = async () => {
+    try {
+      // Get current device info
+      const deviceInfo = await AsyncStorage.getItem('device_info');
+      const registeredDevices = await AsyncStorage.getItem('registered_devices') || '[]';
+      const parsedDevices = JSON.parse(registeredDevices);
+      
+      Alert.alert(
+        '🔐 Device Management',
+        `Current Device: ${Device.modelName || 'Unknown'}\nRegistered Devices: ${parsedDevices.length}\n\nWould you like to:`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'View Devices', 
+            onPress: () => {
+              Alert.alert(
+                'Registered Devices',
+                parsedDevices.length > 0 
+                  ? parsedDevices.map((device, index) => `${index + 1}. ${device.name || 'Unknown Device'}`).join('\n')
+                  : 'No devices registered yet.'
+              );
+            }
+          },
+          {
+            text: 'Register This Device',
+            onPress: async () => {
+              try {
+                const newDevice = {
+                  id: Date.now().toString(),
+                  name: Device.modelName || 'Unknown Device',
+                  registeredAt: new Date().toISOString()
+                };
+                const updatedDevices = [...parsedDevices, newDevice];
+                await AsyncStorage.setItem('registered_devices', JSON.stringify(updatedDevices));
+                Alert.alert('✅ Success', 'Device registered successfully!');
+              } catch (error) {
+                Alert.alert('❌ Error', 'Failed to register device.');
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert('❌ Error', 'Failed to access device management.');
+    }
   };
 
   const handlePrivacyPolicy = () => {
     Alert.alert(
       '📋 Privacy Policy',
-      'Your privacy is important to us. We only collect necessary data for gift notifications and do not share your information with third parties.',
-      [{ text: 'OK' }]
+      'TGift Privacy Policy\n\n' +
+      '• We only collect necessary data for gift notifications\n' +
+      '• No personal data is shared with third parties\n' +
+      '• Device tokens are used only for push notifications\n' +
+      '• Cached notifications are stored locally on your device\n' +
+      '• You can clear all data at any time\n\n' +
+      'For questions, contact: support@tgift.app',
+      [
+        { text: 'Accept & Continue' },
+        { 
+          text: 'View Full Policy', 
+          onPress: () => {
+            Alert.alert(
+              'Full Privacy Policy',
+              'Data Collection: We collect minimal data required for app functionality including device tokens for notifications and cached message data.\n\n' +
+              'Data Usage: Data is used solely for delivering gift notifications and improving app performance.\n\n' +
+              'Data Storage: All data is stored locally on your device or in secure cloud storage with encryption.\n\n' +
+              'Data Sharing: We do not sell, trade, or share your data with third parties.\n\n' +
+              'Your Rights: You can delete all data at any time using the Clear All Data option.'
+            );
+          }
+        }
+      ]
     );
   };
 
   const handleClearData = () => {
     Alert.alert(
       '🗑️ Clear All Data',
-      'This will remove all cached notifications and reset settings to default. This action cannot be undone.',
+      'This will permanently remove:\n\n• All cached notifications\n• App settings and preferences\n• Registered device information\n• Any stored user data\n\nThis action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'Clear', 
+          text: 'Clear Everything', 
           style: 'destructive',
           onPress: async () => {
             try {
+              // Clear all AsyncStorage data
               await AsyncStorage.clear();
-              setSettings({
+              
+              // Reset settings to default
+              const defaultSettings = {
                 vibration: true,
                 darkMode: true,
                 animations: true,
                 fontSize: 1,
                 notificationSound: 'default',
-              });
-              Alert.alert('✅ Success', 'All data has been cleared.');
+              };
+              
+              await AsyncStorage.setItem('tgift_settings', JSON.stringify(defaultSettings));
+              setSettings(defaultSettings);
+              
+              Alert.alert(
+                '✅ Data Cleared', 
+                'All data has been successfully cleared. The app will restart with default settings.',
+                [
+                  {
+                    text: 'OK',
+                    onPress: () => {
+                      // Close settings modal and refresh the app
+                      onClose();
+                      if (onSettingsChange) {
+                        onSettingsChange(defaultSettings);
+                      }
+                    }
+                  }
+                ]
+              );
             } catch (error) {
-              Alert.alert('❌ Error', 'Failed to clear data.');
+              Alert.alert('❌ Error', 'Failed to clear data. Please try again.');
+              console.error('Clear data error:', error);
             }
           }
         }
@@ -360,20 +461,21 @@ export default function Settings({ visible, onClose, onSettingsChange }) {
                 iconName={settings.vibration ? "phone-portrait" : "phone-portrait-outline"}
               />
 
-              <SettingToggle
-                title="Gift Notification Sound"
-                description="Play custom sound for gift alerts"
-                isEnabled={settings.notificationSound !== 'off'}
-                onToggle={() => updateSetting('notificationSound', settings.notificationSound === 'off' ? 'default' : 'off')}
-                iconName={settings.notificationSound !== 'off' ? "volume-high" : "volume-mute"}
-              >
-                {settings.notificationSound !== 'off' && (
-                  <SoundSelector 
-                    selectedSound={settings.notificationSound}
-                    onSoundChange={(sound) => updateSetting('notificationSound', sound)}
-                  />
-                )}
-              </SettingToggle>
+              <View style={styles.settingContainer}>
+                <View style={styles.settingHeader}>
+                  <View style={styles.settingInfo}>
+                    <View style={styles.settingTitleRow}>
+                      <Ionicons name="volume-high" size={20} color="#B383FF" style={styles.settingIcon} />
+                      <Text style={styles.settingTitle}>Gift Notification Sound</Text>
+                    </View>
+                    <Text style={styles.settingDescription}>Choose notification sound for gift alerts</Text>
+                  </View>
+                </View>
+                <SoundSelector 
+                  selectedSound={settings.notificationSound}
+                  onSoundChange={(sound) => updateSetting('notificationSound', sound)}
+                />
+              </View>
             </View>
 
             {/* Appearance Settings */}
@@ -614,19 +716,41 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 12,
   },
-  soundScroll: {
+  soundOptionsContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   soundOption: {
     backgroundColor: 'rgba(60, 60, 70, 0.8)',
     borderRadius: 12,
-    padding: 12,
-    marginRight: 12,
+    padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 80,
+    minWidth: 100,
     borderWidth: 1,
     borderColor: 'rgba(197, 175, 255, 0.2)',
+    flex: 1,
+    marginRight: 8,
+  },
+  customSoundOption: {
+    backgroundColor: 'rgba(60, 60, 70, 0.8)',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 175, 255, 0.2)',
+    flex: 1,
+    marginLeft: 8,
+  },
+  customSoundOptionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#B383FF',
+    marginTop: 4,
+    textAlign: 'center',
   },
   soundOptionActive: {
     backgroundColor: 'rgba(179, 131, 255, 0.8)',
