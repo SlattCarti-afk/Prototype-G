@@ -958,3 +958,434 @@ function AppContent() {
           <Text style={styles.notificationTimestamp}>
             {getRelativeTime(item.timestamp)}
           </Text>
+        </View>
+      </View>
+    );
+  };
+
+  if (languageLoading) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: settings.darkMode ? '#0B0B14' : '#F8F9FA' }}>
+          <ActivityIndicator size="large" color="#B383FF" />
+          <Text style={{ color: settings.darkMode ? '#FFFFFF' : '#1A1A1A', marginTop: 10 }}>Loading...</Text>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
+
+  return (
+    <SafeAreaProvider>
+      <SafeAreaView style={[styles.container, { backgroundColor: settings.darkMode ? '#0B0B14' : '#F8F9FA' }]}>
+        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <View style={styles.headerIcon}>
+                <LinearGradient
+                  colors={['#B383FF', '#9B74FF', '#8088fc']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.iconGradient}
+                >
+                  <Ionicons name="gift" size={24} color="#FFFFFF" />
+                </LinearGradient>
+              </View>
+              <View style={styles.headerTextContainer}>
+                <Text style={[styles.headerTitle, { color: settings.darkMode ? '#FFFFFF' : '#1A1A1A' }]}>{t('appTitle')}</Text>
+                <LinearGradient
+                  colors={['#B383FF', '#9B74FF', '#8088fc']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.titleUnderline}
+                />
+                <Text style={[styles.systemText, { color: settings.darkMode ? '#FFFFFF' : '#1A1A1A' }]}>{t('systemText')}</Text>
+              </View>
+            </View>
+            
+            {/* Connection Status & Settings */}
+            <View style={styles.headerRight}>
+              <View style={styles.connectionContainer}>
+                <HeartbeatDot isConnected={isConnected} animationsEnabled={settings.animations} />
+                <Text style={[styles.connectionText, { color: settings.darkMode ? (isConnected ? '#9AE6B4' : '#FEB2B2') : (isConnected ? '#38A169' : '#E53E3E') }]}>
+                  {isConnected ? t('connected') : t('connectionFailed')}
+                </Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.settingsButton}
+                onPress={() => setShowSettings(true)}
+              >
+                <Ionicons name="settings" size={24} color="#B383FF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Main Content */}
+          <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+            {/* Status Card */}
+            <View style={[styles.statusCard, { backgroundColor: settings.darkMode ? 'rgba(30, 20, 50, 0.6)' : 'rgba(255, 255, 255, 0.8)' }]}>
+              <View style={styles.statusHeader}>
+                <Ionicons name="pulse" size={20} color="#B383FF" />
+                <Text style={[styles.statusTitle, { color: settings.darkMode ? '#FFFFFF' : '#1A1A1A' }]}>{t('monitoringStatus')}</Text>
+              </View>
+              <Text style={[styles.statusDescription, { color: settings.darkMode ? '#B0B0C0' : '#495057' }]}>
+                {isConnected ? t('activelyMonitoring') : backendStatus}
+              </Text>
+              {isConnected && (
+                <Text style={[styles.countdownText, { color: settings.darkMode ? '#9AE6B4' : '#38A169' }]}>
+                  {t('nextRefresh', { seconds: countdown })}
+                </Text>
+              )}
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.testButton]}
+                onPress={sendTestNotification}
+                disabled={testButtonLoading}
+              >
+                {testButtonLoading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Ionicons name="flask" size={16} color="#FFFFFF" />
+                    <Text style={styles.buttonText}>{t('sendTestNotification')}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.refreshButton]}
+                onPress={refreshConnection}
+                disabled={refreshButtonLoading}
+              >
+                {refreshButtonLoading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Ionicons name="refresh" size={16} color="#FFFFFF" />
+                    <Text style={styles.buttonText}>{t('refresh')}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* Recent Notifications */}
+            <View style={[styles.notificationsContainer, { backgroundColor: settings.darkMode ? 'rgba(30, 20, 50, 0.6)' : 'rgba(255, 255, 255, 0.8)' }]}>
+              <View style={styles.notificationsHeader}>
+                <View style={styles.notificationsTitle}>
+                  <Ionicons name="newspaper" size={20} color="#B383FF" />
+                  <Text style={[styles.sectionTitle, { color: settings.darkMode ? '#FFFFFF' : '#1A1A1A' }]}>{t('recentGiftNews')}</Text>
+                </View>
+                <View style={styles.alertsBadge}>
+                  <Text style={styles.alertsCount}>{notifications.length}</Text>
+                  <Text style={styles.alertsText}>{t('alerts')}</Text>
+                </View>
+              </View>
+
+              {notifications.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Ionicons name="gift-outline" size={48} color="#9090A0" />
+                  <Text style={[styles.emptyTitle, { color: settings.darkMode ? '#9090A0' : '#6B7280' }]}>{t('noGiftNews')}</Text>
+                  <Text style={[styles.emptyDescription, { color: settings.darkMode ? '#7A7A8A' : '#9CA3AF' }]}>
+                    {t('noGiftNewsDesc')}
+                  </Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={notifications}
+                  renderItem={renderNotificationItem}
+                  keyExtractor={(item, index) => `notification-${index}-${item.timestamp}`}
+                  scrollEnabled={false}
+                  showsVerticalScrollIndicator={false}
+                />
+              )}
+            </View>
+
+            {/* About Section */}
+            <View style={styles.aboutSection}>
+              <Text style={[styles.aboutText, { color: settings.darkMode ? '#B0B0C0' : '#6B7280' }]}>
+                Made with JavaScript And Hope • {' '}
+                <TouchableOpacity onPress={openTelegramChannel}>
+                  <Text style={styles.linkText}>@PrototypeGifts</Text>
+                </TouchableOpacity>
+              </Text>
+            </View>
+          </ScrollView>
+        </Animated.View>
+
+        <Settings
+          visible={showSettings}
+          onClose={() => setShowSettings(false)}
+          onSettingsChange={handleSettingsChange}
+          currentSettings={settings}
+        />
+      </SafeAreaView>
+    </SafeAreaProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingTop: Platform.OS === 'ios' ? 8 : 16,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  headerIcon: {
+    marginRight: 12,
+  },
+  iconGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  titleUnderline: {
+    height: 2,
+    width: 60,
+    marginBottom: 4,
+  },
+  systemText: {
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  headerRight: {
+    alignItems: 'flex-end',
+  },
+  connectionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  connectionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  settingsButton: {
+    padding: 4,
+  },
+  scrollContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  statusCard: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(179, 131, 255, 0.2)',
+  },
+  statusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statusTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  statusDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  countdownText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  testButton: {
+    backgroundColor: '#8088fc',
+  },
+  refreshButton: {
+    backgroundColor: '#B383FF',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  notificationsContainer: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(179, 131, 255, 0.2)',
+  },
+  notificationsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  notificationsTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  alertsBadge: {
+    backgroundColor: 'rgba(179, 131, 255, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  alertsCount: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#B383FF',
+  },
+  alertsText: {
+    fontSize: 10,
+    color: '#B383FF',
+    opacity: 0.8,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  emptyDescription: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  notificationItem: {
+    marginBottom: 12,
+  },
+  notificationCard: {
+    backgroundColor: 'rgba(179, 131, 255, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(179, 131, 255, 0.2)',
+  },
+  notificationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  notificationIcon: {
+    marginRight: 8,
+  },
+  notificationHeadline: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8088fc',
+    flex: 1,
+  },
+  messageContainer: {
+    marginBottom: 8,
+  },
+  notificationMessage: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#495057',
+    marginBottom: 8,
+  },
+  notificationActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  readMoreButton: {
+    paddingVertical: 4,
+  },
+  readMoreText: {
+    fontSize: 12,
+    color: '#8088fc',
+    fontWeight: '500',
+  },
+  viewChannelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: 'rgba(128, 136, 252, 0.1)',
+    borderRadius: 6,
+    gap: 4,
+  },
+  viewChannelIcon: {
+    // Icon styles handled by Ionicons
+  },
+  viewChannelText: {
+    fontSize: 12,
+    color: '#8088fc',
+    fontWeight: '500',
+  },
+  notificationTimestamp: {
+    fontSize: 12,
+    color: '#9090A0',
+    fontStyle: 'italic',
+  },
+  aboutSection: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    marginBottom: 20,
+  },
+  aboutText: {
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  linkText: {
+    color: '#B383FF',
+    fontWeight: '600',
+  },
+});
