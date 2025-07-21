@@ -99,8 +99,9 @@ export default function App() {
   useEffect(() => {
     // Load backend URL from file first
     loadBackendURL().then(() => {
-      // Load cached notifications
-      loadCachedNotifications();
+      // Load cached notifications first to show immediately
+      const cachedNotifications = loadCachedNotifications();
+      console.log('App initialized with cached notifications:', cachedNotifications.length);
 
       // Check backend status
       checkBackendStatus();
@@ -164,11 +165,15 @@ export default function App() {
               n.message === notification.message
             )
           );
+          console.log('Loaded cached notifications:', uniqueNotifications.length);
           setNotifications(uniqueNotifications);
+          return uniqueNotifications;
         }
       }
+      return [];
     } catch (error) {
       console.log('Failed to load cached notifications:', error);
+      return [];
     }
   };
 
@@ -176,6 +181,7 @@ export default function App() {
     try {
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         window.localStorage.setItem('tgift_notifications', JSON.stringify(newNotifications));
+        console.log('Cached notifications:', newNotifications.length);
       }
     } catch (error) {
       console.log('Failed to cache notifications:', error);
@@ -219,16 +225,30 @@ export default function App() {
       if (response.ok) {
         const data = await response.json();
         if (data.notifications && data.notifications.length > 0) {
-          // Remove duplicates based on timestamp and message content
-          const uniqueNotifications = data.notifications.filter((notification, index, self) =>
+          // Get current notifications (either from state or cache)
+          const currentNotifications = notifications.length > 0 ? notifications : loadCachedNotifications();
+          
+          // Merge new notifications with existing ones
+          const allNotifications = [...currentNotifications, ...data.notifications];
+          
+          // Remove duplicates based on timestamp, message content, and headline
+          const uniqueNotifications = allNotifications.filter((notification, index, self) =>
             index === self.findIndex((n) => 
               n.timestamp === notification.timestamp && 
               n.message === notification.message &&
               n.headline === notification.headline
             )
           );
+          
+          // Sort by timestamp (newest first)
+          uniqueNotifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+          
+          console.log('Fetched notifications:', data.notifications.length, 'Total unique:', uniqueNotifications.length);
           setNotifications(uniqueNotifications);
           cacheNotifications(uniqueNotifications);
+        } else {
+          // No new notifications from server, keep existing cached ones
+          console.log('No new notifications from server');
         }
       }
     } catch (error) {
@@ -303,6 +323,16 @@ export default function App() {
       if (response.ok) {
         await playNotificationSound();
         Alert.alert('✅ Success', 'Test notification sent to backend! You should receive a push notification shortly.');
+
+        // Add the test notification to local state immediately
+        const newTestNotification = {
+          ...testData,
+          timestamp: new Date().toISOString()
+        };
+        
+        const updatedNotifications = [newTestNotification, ...notifications];
+        setNotifications(updatedNotifications);
+        cacheNotifications(updatedNotifications);
 
         setTimeout(() => {
           checkBackendStatus();
