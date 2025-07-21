@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator, Animated, FlatList, Linking, ScrollView } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator, Animated, FlatList, Linking, ScrollView, Vibration } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
@@ -586,6 +586,11 @@ export default function App() {
 
   const playNotificationSound = async () => {
     try {
+      // Apply vibration setting
+      if (settings.vibration) {
+        Vibration.vibrate([0, 250, 250, 250]);
+      }
+
       const { sound } = await Audio.Sound.createAsync(
         require('./Sound.ogg'),
         { shouldPlay: true, volume: 0.8 }
@@ -757,6 +762,10 @@ export default function App() {
 
   const handleSettingsChange = (newSettings) => {
     setSettings(newSettings);
+    // Apply vibration setting immediately
+    if (newSettings.vibration !== settings.vibration) {
+      console.log('Vibration setting changed:', newSettings.vibration);
+    }
   };
 
   const renderNotificationItem = ({ item, index }) => {
@@ -812,6 +821,8 @@ export default function App() {
       </View>
     );
   };
+
+  const styles = getStyles(settings);
 
   return (
     <SafeAreaProvider>
@@ -979,10 +990,10 @@ wait for new gift opportunities to be detected!
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (settings) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0B14',
+    backgroundColor: settings.darkMode ? '#0B0B14' : '#F8F9FA',
   },
   scrollView: {
     flex: 1,
@@ -998,10 +1009,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 12,
-    backgroundColor: 'rgba(11, 11, 20, 0.95)',
+    backgroundColor: settings.darkMode ? 'rgba(11, 11, 20, 0.95)' : 'rgba(248, 249, 250, 0.95)',
     backdropFilter: 'blur(10px)',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(197, 175, 255, 0.1)',
+    borderBottomColor: settings.darkMode ? 'rgba(197, 175, 255, 0.1)' : 'rgba(108, 117, 125, 0.1)',
   },
   headerTop: {
     flexDirection: 'row',
@@ -1018,18 +1029,18 @@ const styles = StyleSheet.create({
     color: '#C5AFFF',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 24 + (settings.fontSize * 2), // Apply font size setting
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: settings.darkMode ? '#FFFFFF' : '#212529',
     letterSpacing: -1,
-    textShadowColor: 'rgba(197, 175, 255, 0.3)',
+    textShadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   headerSubtitle: {
-    fontSize: 12,
-    color: '#B0B0C0',
+    fontSize: 12 + settings.fontSize,
+    color: settings.darkMode ? '#B0B0C0' : '#6C757D',
     fontWeight: '600',
     marginBottom: 2,
     letterSpacing: 0.5,
@@ -1043,8 +1054,8 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   connectionStatus: {
-    fontSize: 11,
-    color: '#B0B0C0',
+    fontSize: 11 + settings.fontSize,
+    color: settings.darkMode ? '#B0B0C0' : '#6C757D',
     fontWeight: '500',
     letterSpacing: 0.3,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
@@ -1118,14 +1129,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   statusCard: {
-    backgroundColor: 'rgba(20, 15, 35, 0.8)',
+    backgroundColor: settings.darkMode ? 'rgba(20, 15, 35, 0.8)' : 'rgba(255, 255, 255, 0.9)',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(197, 175, 255, 0.15)',
+    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.15)' : 'rgba(108, 117, 125, 0.15)',
     backdropFilter: 'blur(20px)',
-    shadowColor: 'rgba(197, 175, 255, 0.3)',
+    shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -1146,11 +1157,11 @@ const styles = StyleSheet.create({
     color: '#C5AFFF',
   },
   cardTitle: {
-    fontSize: 20,
+    fontSize: 20 + (settings.fontSize * 2),
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: settings.darkMode ? '#FFFFFF' : '#212529',
     letterSpacing: -0.5,
-    textShadowColor: 'rgba(197, 175, 255, 0.2)',
+    textShadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(108, 117, 125, 0.2)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
@@ -1173,8 +1184,8 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   cardDescription: {
-    fontSize: 16,
-    color: '#B0B0C0',
+    fontSize: 16 + settings.fontSize,
+    color: settings.darkMode ? '#B0B0C0' : '#6C757D',
     lineHeight: 24,
     marginBottom: 18,
     fontWeight: '500',
@@ -1305,15 +1316,15 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   notificationsCard: {
-    backgroundColor: 'rgba(20, 15, 35, 0.8)',
+    backgroundColor: settings.darkMode ? 'rgba(20, 15, 35, 0.8)' : 'rgba(255, 255, 255, 0.9)',
     borderRadius: 20,
     padding: 24,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: 'rgba(197, 175, 255, 0.15)',
+    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.15)' : 'rgba(108, 117, 125, 0.15)',
     backdropFilter: 'blur(20px)',
     minHeight: 300,
-    shadowColor: 'rgba(197, 175, 255, 0.3)',
+    shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -1333,19 +1344,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   notificationCard: {
-    backgroundColor: 'rgba(30, 20, 50, 0.8)',
+    backgroundColor: settings.darkMode ? 'rgba(30, 20, 50, 0.8)' : 'rgba(248, 249, 250, 0.9)',
     borderRadius: 16,
     padding: 20,
     borderLeftWidth: 4,
-    borderLeftColor: 'rgba(197, 175, 255, 0.8)',
+    borderLeftColor: settings.darkMode ? 'rgba(197, 175, 255, 0.8)' : 'rgba(108, 117, 125, 0.8)',
     backdropFilter: 'blur(10px)',
-    shadowColor: 'rgba(197, 175, 255, 0.2)',
+    shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(108, 117, 125, 0.2)',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
     elevation: 8,
     borderWidth: 1,
-    borderColor: 'rgba(197, 175, 255, 0.1)',
+    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.1)' : 'rgba(108, 117, 125, 0.1)',
   },
   notificationHeader: {
     flexDirection: 'row',
@@ -1357,8 +1368,8 @@ const styles = StyleSheet.create({
     color: '#C5AFFF',
   },
   notificationHeadline: {
-    fontSize: 16,
-    color: '#FFFFFF',
+    fontSize: 16 + settings.fontSize,
+    color: settings.darkMode ? '#FFFFFF' : '#212529',
     fontWeight: '700',
     letterSpacing: -0.2,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
@@ -1368,8 +1379,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   notificationMessage: {
-    fontSize: 14,
-    color: '#B0B0C0',
+    fontSize: 14 + settings.fontSize,
+    color: settings.darkMode ? '#B0B0C0' : '#6C757D',
     fontWeight: '500',
     lineHeight: 20,
     letterSpacing: 0.1,
@@ -1433,19 +1444,19 @@ const styles = StyleSheet.create({
     color: '#C5AFFF',
   },
   emptyStateTitle: {
-    fontSize: 18,
+    fontSize: 18 + (settings.fontSize * 2),
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: settings.darkMode ? '#FFFFFF' : '#212529',
     marginBottom: 10,
     letterSpacing: -0.3,
-    textShadowColor: 'rgba(197, 175, 255, 0.2)',
+    textShadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(108, 117, 125, 0.2)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   emptyStateDescription: {
-    fontSize: 14,
-    color: '#B0B0C0',
+    fontSize: 14 + settings.fontSize,
+    color: settings.darkMode ? '#B0B0C0' : '#6C757D',
     textAlign: 'center',
     lineHeight: 22,
     maxWidth: 280,

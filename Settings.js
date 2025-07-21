@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Platform, Alert, Vibration } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Device from 'expo-device';
 
 const AnimatedIcon = ({ name, color, size, isEnabled, style }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -428,7 +429,7 @@ export default function Settings({ visible, onClose, onSettingsChange }) {
       <TouchableOpacity style={styles.backdrop} onPress={onClose} activeOpacity={1} />
       <Animated.View style={[styles.container, { transform: [{ translateY }] }]}>
         <LinearGradient
-          colors={['rgba(20, 15, 35, 0.98)', 'rgba(11, 11, 20, 0.98)']}
+          colors={settings.darkMode ? ['rgba(20, 15, 35, 0.98)', 'rgba(11, 11, 20, 0.98)'] : ['rgba(248, 249, 250, 0.98)', 'rgba(255, 255, 255, 0.98)']}
           style={styles.gradient}
         >
           {/* Header */}
