@@ -227,7 +227,7 @@ const SecuritySection = ({ onDeviceManagement, onClearData }) => {
   );
 };
 
-export default function Settings({ visible, onClose, onSettingsChange }) {
+export default function Settings({ visible, onClose, onSettingsChange, currentSettings }) {
   const [settings, setSettings] = useState({
     vibration: true,
     darkMode: true,
@@ -388,7 +388,7 @@ export default function Settings({ visible, onClose, onSettingsChange }) {
       <TouchableOpacity style={styles.backdrop} onPress={onClose} activeOpacity={1} />
       <Animated.View style={[styles.container, { transform: [{ translateY }] }]}>
         <LinearGradient
-          colors={settings.darkMode ? ['rgba(20, 15, 35, 0.98)', 'rgba(11, 11, 20, 0.98)'] : ['rgba(248, 249, 250, 0.98)', 'rgba(255, 255, 255, 0.98)']}
+          colors={settings.darkMode ? ['rgba(20, 15, 35, 0.98)', 'rgba(11, 11, 20, 0.98)'] : ['rgba(248, 249, 250, 0.98)', 'rgba(240, 242, 247, 0.98)']}
           style={styles.gradient}
         >
           {/* Header */}
@@ -505,7 +505,9 @@ export default function Settings({ visible, onClose, onSettingsChange }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = getSettingsStyles(currentSettings || settings);
+
+const getSettingsStyles = (settingsTheme) => StyleSheet.create({
   overlay: {
     position: 'absolute',
     top: 0,
@@ -583,16 +585,16 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: settingsTheme.darkMode ? '#FFFFFF' : '#1A1A1A',
     letterSpacing: -0.3,
   },
   settingContainer: {
-    backgroundColor: 'rgba(30, 20, 50, 0.6)',
+    backgroundColor: settingsTheme.darkMode ? 'rgba(30, 20, 50, 0.6)' : 'rgba(255, 255, 255, 0.8)',
     borderRadius: 16,
     padding: 20,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(197, 175, 255, 0.1)',
+    borderColor: settingsTheme.darkMode ? 'rgba(197, 175, 255, 0.1)' : 'rgba(179, 131, 255, 0.2)',
   },
   settingHeader: {
     flexDirection: 'row',
@@ -614,12 +616,12 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: settingsTheme.darkMode ? '#FFFFFF' : '#1A1A1A',
     letterSpacing: -0.2,
   },
   settingDescription: {
     fontSize: 14,
-    color: '#B0B0C0',
+    color: settingsTheme.darkMode ? '#B0B0C0' : '#495057',
     lineHeight: 20,
   },
   toggleContainer: {
@@ -809,4 +811,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
   },
-});
+});}

@@ -608,10 +608,15 @@ export default function App() {
       if (settings.vibration) {
         // Continuous vibration pattern for 8 seconds (8000ms)
         const vibrationPattern = [];
-        for (let i = 0; i < 32; i++) { // 32 cycles of 250ms vibrate/pause = 8 seconds
-          vibrationPattern.push(250, 250);
+        for (let i = 0; i < 16; i++) { // 16 cycles of 500ms vibrate = 8 seconds
+          vibrationPattern.push(500);
         }
-        Vibration.vibrate(vibrationPattern);
+        Vibration.vibrate(vibrationPattern, true); // true for repeat until stopped
+        
+        // Stop vibration after 8 seconds
+        setTimeout(() => {
+          Vibration.cancel();
+        }, 8000);
       }
 
       // Play notification sound based on user preference
@@ -1020,6 +1025,7 @@ wait for new gift opportunities to be detected!
           visible={showSettings}
           onClose={() => setShowSettings(false)}
           onSettingsChange={handleSettingsChange}
+          currentSettings={settings}
         />
       </SafeAreaView>
     </SafeAreaProvider>
@@ -1067,7 +1073,7 @@ const getStyles = (settings) => StyleSheet.create({
   headerTitle: {
     fontSize: 24 + (settings.fontSize * 2), // Apply font size setting
     fontWeight: '900',
-    color: settings.darkMode ? '#FFFFFF' : '#212529',
+    color: settings.darkMode ? '#FFFFFF' : '#1A1A1A',
     letterSpacing: -1,
     textShadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
@@ -1076,7 +1082,7 @@ const getStyles = (settings) => StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 12 + settings.fontSize,
-    color: settings.darkMode ? '#B0B0C0' : '#6C757D',
+    color: settings.darkMode ? '#B0B0C0' : '#495057',
     fontWeight: '600',
     marginBottom: 2,
     letterSpacing: 0.5,
@@ -1091,7 +1097,7 @@ const getStyles = (settings) => StyleSheet.create({
   },
   connectionStatus: {
     fontSize: 11 + settings.fontSize,
-    color: settings.darkMode ? '#B0B0C0' : '#6C757D',
+    color: settings.darkMode ? '#B0B0C0' : '#495057',
     fontWeight: '500',
     letterSpacing: 0.3,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
@@ -1158,6 +1164,11 @@ const getStyles = (settings) => StyleSheet.create({
   },
   settingsButton: {
     marginRight: 12,
+    backgroundColor: 'rgba(179, 131, 255, 0.2)',
+    padding: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(179, 131, 255, 0.4)',
   },
   mainContent: {
     flex: 1,
@@ -1165,15 +1176,15 @@ const getStyles = (settings) => StyleSheet.create({
     marginTop: 16,
   },
   statusCard: {
-    backgroundColor: settings.darkMode ? 'rgba(20, 15, 35, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: settings.darkMode ? 'rgba(20, 15, 35, 0.95)' : 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.15)' : 'rgba(108, 117, 125, 0.15)',
+    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.15)' : 'rgba(179, 131, 255, 0.25)',
     backdropFilter: 'blur(20px)',
     ...(settings.animations && {
-      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
+      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(179, 131, 255, 0.3)',
       shadowOffset: { width: 0, height: 6 },
       shadowOpacity: 0.3,
       shadowRadius: 12,
@@ -1197,7 +1208,7 @@ const getStyles = (settings) => StyleSheet.create({
   cardTitle: {
     fontSize: 20 + (settings.fontSize * 2),
     fontWeight: '800',
-    color: settings.darkMode ? '#FFFFFF' : '#212529',
+    color: settings.darkMode ? '#FFFFFF' : '#1A1A1A',
     letterSpacing: -0.5,
     textShadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(108, 117, 125, 0.2)',
     textShadowOffset: { width: 0, height: 1 },
@@ -1223,7 +1234,7 @@ const getStyles = (settings) => StyleSheet.create({
   },
   cardDescription: {
     fontSize: 16 + settings.fontSize,
-    color: settings.darkMode ? '#B0B0C0' : '#6C757D',
+    color: settings.darkMode ? '#B0B0C0' : '#495057',
     lineHeight: 24,
     marginBottom: 18,
     fontWeight: '500',
@@ -1309,13 +1320,13 @@ const getStyles = (settings) => StyleSheet.create({
     }),
   },
   secondaryButton: {
-    backgroundColor: settings.darkMode ? 'rgba(20, 15, 35, 0.8)' : 'rgba(108, 117, 125, 0.1)',
+    backgroundColor: settings.darkMode ? 'rgba(20, 15, 35, 0.8)' : 'rgba(255, 255, 255, 0.9)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
+    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(179, 131, 255, 0.4)',
     backdropFilter: 'blur(10px)',
     ...(settings.animations && {
-      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(108, 117, 125, 0.2)',
+      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(179, 131, 255, 0.2)',
       shadowOffset: { width: 0, height: 6 },
       shadowOpacity: 0.25,
       shadowRadius: 12,
@@ -1353,21 +1364,21 @@ const getStyles = (settings) => StyleSheet.create({
   secondaryButtonText: {
     fontSize: 17,
     fontWeight: '700',
-    color: settings.darkMode ? '#C5AFFF' : '#495057',
+    color: settings.darkMode ? '#C5AFFF' : '#8B5CF6',
     letterSpacing: 0.5,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   notificationsCard: {
-    backgroundColor: settings.darkMode ? 'rgba(20, 15, 35, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: settings.darkMode ? 'rgba(20, 15, 35, 0.95)' : 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     padding: 24,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.15)' : 'rgba(108, 117, 125, 0.15)',
+    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.15)' : 'rgba(179, 131, 255, 0.25)',
     backdropFilter: 'blur(20px)',
     minHeight: 300,
     ...(settings.animations && {
-      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(108, 117, 125, 0.3)',
+      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.3)' : 'rgba(179, 131, 255, 0.3)',
       shadowOffset: { width: 0, height: 6 },
       shadowOpacity: 0.3,
       shadowRadius: 12,
@@ -1388,16 +1399,16 @@ const getStyles = (settings) => StyleSheet.create({
     marginBottom: 16,
   },
   notificationCard: {
-    backgroundColor: settings.darkMode ? 'rgba(30, 20, 50, 0.8)' : 'rgba(248, 249, 250, 0.9)',
+    backgroundColor: settings.darkMode ? 'rgba(30, 20, 50, 0.95)' : 'rgba(248, 249, 250, 0.95)',
     borderRadius: 16,
     padding: 20,
     borderLeftWidth: 4,
-    borderLeftColor: settings.darkMode ? 'rgba(197, 175, 255, 0.8)' : 'rgba(108, 117, 125, 0.8)',
+    borderLeftColor: settings.darkMode ? 'rgba(197, 175, 255, 0.8)' : 'rgba(179, 131, 255, 0.8)',
     backdropFilter: 'blur(10px)',
     borderWidth: 1,
-    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.1)' : 'rgba(108, 117, 125, 0.1)',
+    borderColor: settings.darkMode ? 'rgba(197, 175, 255, 0.1)' : 'rgba(179, 131, 255, 0.2)',
     ...(settings.animations && {
-      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(108, 117, 125, 0.2)',
+      shadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(179, 131, 255, 0.2)',
       shadowOffset: { width: 0, height: 6 },
       shadowOpacity: 0.4,
       shadowRadius: 12,
@@ -1415,7 +1426,7 @@ const getStyles = (settings) => StyleSheet.create({
   },
   notificationHeadline: {
     fontSize: 16 + settings.fontSize,
-    color: settings.darkMode ? '#FFFFFF' : '#212529',
+    color: settings.darkMode ? '#FFFFFF' : '#1A1A1A',
     fontWeight: '700',
     letterSpacing: -0.2,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
@@ -1426,7 +1437,7 @@ const getStyles = (settings) => StyleSheet.create({
   },
   notificationMessage: {
     fontSize: 14 + settings.fontSize,
-    color: settings.darkMode ? '#B0B0C0' : '#6C757D',
+    color: settings.darkMode ? '#B0B0C0' : '#495057',
     fontWeight: '500',
     lineHeight: 20,
     letterSpacing: 0.1,
@@ -1492,7 +1503,7 @@ const getStyles = (settings) => StyleSheet.create({
   emptyStateTitle: {
     fontSize: 18 + (settings.fontSize * 2),
     fontWeight: '700',
-    color: settings.darkMode ? '#FFFFFF' : '#212529',
+    color: settings.darkMode ? '#FFFFFF' : '#1A1A1A',
     marginBottom: 10,
     letterSpacing: -0.3,
     textShadowColor: settings.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(108, 117, 125, 0.2)',
@@ -1502,7 +1513,7 @@ const getStyles = (settings) => StyleSheet.create({
   },
   emptyStateDescription: {
     fontSize: 14 + settings.fontSize,
-    color: settings.darkMode ? '#B0B0C0' : '#6C757D',
+    color: settings.darkMode ? '#B0B0C0' : '#495057',
     textAlign: 'center',
     lineHeight: 22,
     maxWidth: 280,
