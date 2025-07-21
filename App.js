@@ -7,6 +7,8 @@ import Constants from 'expo-constants';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Settings from './Settings';
 
 let BACKEND_BASE_URL = 'https://8ee58e81-aaf6-4f97-8977-e5e3dab7598b-00-2akwa9443cie2.pike.replit.dev'; // fallback
 
@@ -354,13 +356,36 @@ export default function App() {
   const pollInterval = useRef(null);
   const countdownInterval = useRef(null);
   const [sound, setSound] = useState();
-	const [showSettings, setShowSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [settings, setSettings] = useState({
+    vibration: true,
+    darkMode: true,
+    animations: true,
+    fontSize: 1,
+    notificationSound: 'default',
+  });
 
   useEffect(() => {
+    // Load settings first
+    const loadSettings = async () => {
+      try {
+        const savedSettings = await AsyncStorage.getItem('tgift_settings');
+        if (savedSettings) {
+          const parsed = JSON.parse(savedSettings);
+          setSettings(prev => ({ ...prev, ...parsed }));
+        }
+      } catch (error) {
+        console.log('Failed to load settings:', error);
+      }
+    };
+
     // Load backend URL from file first
-    loadBackendURL().then(() => {
+    loadBackendURL().then(async () => {
+      // Load settings
+      await loadSettings();
+      
       // Load cached notifications first to show immediately
-      const cachedNotifications = loadCachedNotifications();
+      const cachedNotifications = await loadCachedNotifications();
       console.log('App initialized with cached notifications:', cachedNotifications.length);
 
       // Check backend status
@@ -411,33 +436,30 @@ export default function App() {
     };
   }, []);
 
-  const loadCachedNotifications = () => {
+  const loadCachedNotifications = async () => {
     try {
-      // In a real app, you'd use AsyncStorage, but for web we'll use localStorage
-      if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        const cached = window.localStorage.getItem('tgift_notifications');
-        if (cached) {
-          const parsedNotifications = JSON.parse(cached);
+      const cached = await AsyncStorage.getItem('tgift_notifications');
+      if (cached) {
+        const parsedNotifications = JSON.parse(cached);
 
-          // Filter to only show NEWS notifications (not test notifications)
-          const newsOnlyNotifications = parsedNotifications.filter(notification => 
-            notification.message && (
-              notification.message.toLowerCase().includes('news') ||
-              notification.headline && notification.headline.toLowerCase().includes('news')
-            ) && !notification.headline?.includes('🧪 Test')
-          );
+        // Filter to only show NEWS notifications (not test notifications)
+        const newsOnlyNotifications = parsedNotifications.filter(notification => 
+          notification.message && (
+            notification.message.toLowerCase().includes('news') ||
+            notification.headline && notification.headline.toLowerCase().includes('news')
+          ) && !notification.headline?.includes('🧪 Test')
+        );
 
-          // Remove duplicates when loading
-          const uniqueNotifications = newsOnlyNotifications.filter((notification, index, self) =>
-            index === self.findIndex((n) => 
-              n.timestamp === notification.timestamp && 
-              n.message === notification.message
-            )
-          );
-          console.log('Loaded cached NEWS notifications:', uniqueNotifications.length);
-          setNotifications(uniqueNotifications);
-          return uniqueNotifications;
-        }
+        // Remove duplicates when loading
+        const uniqueNotifications = newsOnlyNotifications.filter((notification, index, self) =>
+          index === self.findIndex((n) => 
+            n.timestamp === notification.timestamp && 
+            n.message === notification.message
+          )
+        );
+        console.log('Loaded cached NEWS notifications:', uniqueNotifications.length);
+        setNotifications(uniqueNotifications);
+        return uniqueNotifications;
       }
       return [];
     } catch (error) {
@@ -446,12 +468,10 @@ export default function App() {
     }
   };
 
-  const cacheNotifications = (newNotifications) => {
+  const cacheNotifications = async (newNotifications) => {
     try {
-      if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        window.localStorage.setItem('tgift_notifications', JSON.stringify(newNotifications));
-        console.log('Cached notifications:', newNotifications.length);
-      }
+      await AsyncStorage.setItem('tgift_notifications', JSON.stringify(newNotifications));
+      console.log('Cached notifications:', newNotifications.length);
     } catch (error) {
       console.log('Failed to cache notifications:', error);
     }
@@ -504,7 +524,7 @@ export default function App() {
 
           if (newsNotifications.length > 0) {
             // Get current notifications (either from state or cache)
-            const currentNotifications = notifications.length > 0 ? notifications : loadCachedNotifications();
+            const currentNotifications = notifications.length > 0 ? notifications : await loadCachedNotifications();
 
             // Merge new news notifications with existing ones
             const allNotifications = [...currentNotifications, ...newsNotifications];
@@ -523,7 +543,7 @@ export default function App() {
 
             console.log('Fetched NEWS notifications:', newsNotifications.length, 'Total unique:', uniqueNotifications.length);
             setNotifications(uniqueNotifications);
-            cacheNotifications(uniqueNotifications);
+            await cacheNotifications(uniqueNotifications);
           } else {
             console.log('No NEWS notifications from server');
           }
@@ -733,6 +753,10 @@ export default function App() {
 
   const openTelegramChannel = () => {
     Linking.openURL('https://t.me/PrototypeOff');
+  };
+
+  const handleSettingsChange = (newSettings) => {
+    setSettings(newSettings);
   };
 
   const renderNotificationItem = ({ item, index }) => {
@@ -945,6 +969,11 @@ wait for new gift opportunities to be detected!
             </View>
           </Animated.View>
         </ScrollView>
+        <Settings 
+          visible={showSettings}
+          onClose={() => setShowSettings(false)}
+          onSettingsChange={handleSettingsChange}
+        />
       </SafeAreaView>
     </SafeAreaProvider>
   );
