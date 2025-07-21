@@ -52,8 +52,11 @@ const HeartbeatDot = ({ isConnected }) => {
         setAnimationState('reviving');
       }
       setPreviousConnection(isConnected);
+    } else if (!isConnected && animationState === 'normal') {
+      // If we're offline and somehow in normal state, go to dead
+      setAnimationState('dead');
     }
-  }, [isConnected, previousConnection]);
+  }, [isConnected, previousConnection, animationState]);
 
   // Color transition animation
   useEffect(() => {
@@ -71,6 +74,11 @@ const HeartbeatDot = ({ isConnected }) => {
     }
 
     const normalHeartbeat = () => {
+      // Only continue heartbeat if we're connected and in normal state
+      if (!isConnected || animationState !== 'normal') {
+        return;
+      }
+      
       const sequence = Animated.sequence([
         Animated.timing(heartbeatAnim, {
           toValue: 1.4,
@@ -97,7 +105,8 @@ const HeartbeatDot = ({ isConnected }) => {
       
       animationRef.current = sequence;
       sequence.start(() => {
-        if (animationState === 'normal') {
+        // Double check before continuing
+        if (animationState === 'normal' && isConnected) {
           normalHeartbeat();
         }
       });
@@ -210,7 +219,12 @@ const HeartbeatDot = ({ isConnected }) => {
 
     switch (animationState) {
       case 'normal':
-        normalHeartbeat();
+        // Only start normal heartbeat if connected
+        if (isConnected) {
+          normalHeartbeat();
+        } else {
+          setAnimationState('dead');
+        }
         break;
       case 'dying':
         dyingAnimation();
@@ -219,7 +233,8 @@ const HeartbeatDot = ({ isConnected }) => {
         revivingAnimation();
         break;
       case 'dead':
-        // No animation when dead
+        // No animation when dead - stay still
+        heartbeatAnim.setValue(1);
         break;
     }
 
