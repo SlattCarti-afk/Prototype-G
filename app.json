@@ -15,7 +15,12 @@
       "**/*"
     ],
     "expo": {
-      "assetFileExtensions": ["ogg", "mp3", "wav", "m4a"]
+      "assetFileExtensions": [
+        "ogg",
+        "mp3",
+        "wav",
+        "m4a"
+      ]
     },
     "ios": {
       "supportsTablet": true
@@ -28,7 +33,8 @@
       "permissions": [
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE"
-      ]
+      ],
+      "package": "com.futurelocked.tgift"
     },
     "web": {
       "bundler": "metro"
@@ -41,6 +47,12 @@
           "color": "#B23AC7"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5fb0134e-e24d-40db-b7ae-eb1bce1761ee"
+      }
+    },
+    "owner": "futurelocked"
   }
 }
