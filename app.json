@@ -47,11 +47,6 @@
         }
       ]
     ],
-    "extra": {
-      "eas": {
-        "projectId": "5fb0134e-e24d-40db-b7ae-eb1bce1761ee"
-      }
-    },
     "owner": "futurelocked"
   }
 }
