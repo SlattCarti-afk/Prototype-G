@@ -44,32 +44,43 @@ const HeartbeatDot = ({ isConnected }) => {
   // Handle connection state changes
   useEffect(() => {
     if (previousConnection !== isConnected) {
-      // Stop any current animation when connection state changes
+      console.log('Connection state changed:', previousConnection, '->', isConnected);
+      
+      // IMMEDIATELY stop any current animation when connection state changes
       if (animationRef.current) {
+        console.log('Stopping current animation due to connection change');
         animationRef.current.stop();
         animationRef.current = null;
       }
       
       if (!isConnected && previousConnection) {
         // Going offline - start dying animation
+        console.log('Going offline - starting dying animation');
         setAnimationState('dying');
       } else if (isConnected && !previousConnection) {
         // Coming back online - start reviving animation
+        console.log('Coming online - starting reviving animation');
         setAnimationState('reviving');
       }
       setPreviousConnection(isConnected);
     }
   }, [isConnected, previousConnection]);
 
-  // Separate effect to handle offline state enforcement
+  // Separate effect to handle offline state enforcement and force stop animations
   useEffect(() => {
-    if (!isConnected && (animationState === 'normal' || animationState === 'reviving')) {
-      // If we're offline and in normal/reviving state, stop and go to dead
+    if (!isConnected) {
+      // If we're offline, ALWAYS stop any running animation immediately
       if (animationRef.current) {
+        console.log('Force stopping animation - backend offline');
         animationRef.current.stop();
         animationRef.current = null;
       }
-      setAnimationState('dead');
+      
+      // If we're offline and in normal/reviving state, go to dead
+      if (animationState === 'normal' || animationState === 'reviving') {
+        console.log('Setting animation to dead due to offline state');
+        setAnimationState('dead');
+      }
     }
   }, [isConnected, animationState]);
 
@@ -97,37 +108,53 @@ const HeartbeatDot = ({ isConnected }) => {
         return;
       }
       
+      // Create individual animations that can be stopped
+      const beat1Up = Animated.timing(heartbeatAnim, {
+        toValue: 1.4,
+        duration: 150,
+        useNativeDriver: true,
+      });
+      
+      const beat1Down = Animated.timing(heartbeatAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      });
+      
+      const beat2Up = Animated.timing(heartbeatAnim, {
+        toValue: 1.2,
+        duration: 100,
+        useNativeDriver: true,
+      });
+      
+      const beat2Down = Animated.timing(heartbeatAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      });
+      
+      const pause = Animated.delay(800);
+      
       const sequence = Animated.sequence([
-        Animated.timing(heartbeatAnim, {
-          toValue: 1.4,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(heartbeatAnim, {
-          toValue: 1,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(heartbeatAnim, {
-          toValue: 1.2,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-        Animated.timing(heartbeatAnim, {
-          toValue: 1,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-        Animated.delay(800),
+        beat1Up,
+        beat1Down, 
+        beat2Up,
+        beat2Down,
+        pause,
       ]);
       
       animationRef.current = sequence;
       sequence.start((finished) => {
-        // Clear the ref when animation completes
+        // Clear the ref when animation completes or stops
         animationRef.current = null;
-        // Only continue if animation completed naturally and conditions are still met
+        // Only continue if animation completed naturally AND we're still connected and in normal state
         if (finished && animationState === 'normal' && isConnected) {
-          normalHeartbeat();
+          // Double check one more time before recursing
+          if (isConnected && animationState === 'normal') {
+            normalHeartbeat();
+          } else {
+            console.log('Connection lost during heartbeat, stopping');
+          }
         } else {
           console.log('Normal heartbeat stopped - finished:', finished, 'state:', animationState, 'connected:', isConnected);
         }
