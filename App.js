@@ -44,6 +44,11 @@ const HeartbeatDot = ({ isConnected }) => {
   // Handle connection state changes
   useEffect(() => {
     if (previousConnection !== isConnected) {
+      // Stop any current animation when connection state changes
+      if (animationRef.current) {
+        animationRef.current.stop();
+      }
+      
       if (!isConnected && previousConnection) {
         // Going offline - start dying animation
         setAnimationState('dying');
@@ -54,6 +59,9 @@ const HeartbeatDot = ({ isConnected }) => {
       setPreviousConnection(isConnected);
     } else if (!isConnected && animationState === 'normal') {
       // If we're offline and somehow in normal state, go to dead
+      if (animationRef.current) {
+        animationRef.current.stop();
+      }
       setAnimationState('dead');
     }
   }, [isConnected, previousConnection, animationState]);
@@ -104,9 +112,9 @@ const HeartbeatDot = ({ isConnected }) => {
       ]);
       
       animationRef.current = sequence;
-      sequence.start(() => {
-        // Double check before continuing
-        if (animationState === 'normal' && isConnected) {
+      sequence.start((finished) => {
+        // Only continue if animation completed naturally and conditions are still met
+        if (finished && animationState === 'normal' && isConnected) {
           normalHeartbeat();
         }
       });
@@ -165,8 +173,11 @@ const HeartbeatDot = ({ isConnected }) => {
       ]);
       
       animationRef.current = sequence;
-      sequence.start(() => {
-        setAnimationState('dead');
+      sequence.start((finished) => {
+        // Only set to dead if animation completed naturally
+        if (finished) {
+          setAnimationState('dead');
+        }
       });
     };
 
@@ -212,8 +223,11 @@ const HeartbeatDot = ({ isConnected }) => {
       ]);
       
       animationRef.current = sequence;
-      sequence.start(() => {
-        setAnimationState('normal');
+      sequence.start((finished) => {
+        // Only set to normal if animation completed naturally and still connected
+        if (finished && isConnected) {
+          setAnimationState('normal');
+        }
       });
     };
 
