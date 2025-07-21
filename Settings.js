@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Device from 'expo-device';
+import { useLanguage } from './contexts/LanguageContext';
 
 const AnimatedIcon = ({ name, color, size, isEnabled, style, animationsEnabled = true, settingKey, lastChangedSetting }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -115,13 +116,13 @@ const SettingToggle = ({ title, description, isEnabled, onToggle, iconName, chil
   );
 };
 
-const FontSizeSlider = ({ value, onValueChange, styles }) => {
-  const sizes = ['Small', 'Medium', 'Large', 'Extra Large'];
+const FontSizeSlider = ({ value, onValueChange, styles, t }) => {
+  const sizes = [t('small'), t('medium'), t('large'), t('extraLarge')];
   const sizeValues = [12, 16, 20, 24];
 
   return (
     <View style={styles.sliderContainer}>
-      <Text style={styles.sliderLabel}>Font Size: {sizes[value]}</Text>
+      <Text style={styles.sliderLabel}>{t('fontSize')}: {sizes[value]}</Text>
       <View style={styles.sliderTrack}>
         {sizes.map((size, index) => (
           <TouchableOpacity
@@ -146,15 +147,48 @@ const FontSizeSlider = ({ value, onValueChange, styles }) => {
   );
 };
 
-const SoundSelector = ({ selectedSound, onSoundChange, styles }) => {
+const LanguageSelector = ({ selectedLanguage, onLanguageChange, styles, t }) => {
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'ru', name: 'Русский', flag: '🇷🇺' }
+  ];
+
+  return (
+    <View style={styles.languageContainer}>
+      <Text style={styles.languageLabel}>{t('language')}</Text>
+      <View style={styles.languageOptionsContainer}>
+        {languages.map((language) => (
+          <TouchableOpacity
+            key={language.code}
+            style={[
+              styles.languageOption,
+              selectedLanguage === language.code && styles.languageOptionActive,
+            ]}
+            onPress={() => onLanguageChange(language.code)}
+          >
+            <Text style={styles.languageFlag}>{language.flag}</Text>
+            <Text style={[
+              styles.languageOptionText,
+              selectedLanguage === language.code && styles.languageOptionTextActive,
+            ]}>
+              {language.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+const SoundSelector = ({ selectedSound, onSoundChange, styles, t }) => {
   const handleCustomSoundSelection = () => {
     Alert.alert(
-      '🎵 Custom Ringtone',
-      'To use a custom ringtone:\n\n1. Place your audio file in your device storage\n2. Go to your device Settings > Sounds & Haptics > Ringtone\n3. Select your custom audio file\n4. This app will use your device\'s notification sound setting',
+      t('customRingtoneTitle'),
+      t('customRingtoneMessage'),
       [
-        { text: 'OK' },
+        { text: t('ok') },
         { 
-          text: 'Use Default', 
+          text: t('useDefault'), 
           onPress: () => onSoundChange('default')
         }
       ]
@@ -163,7 +197,7 @@ const SoundSelector = ({ selectedSound, onSoundChange, styles }) => {
 
   return (
     <View style={styles.soundContainer}>
-      <Text style={styles.soundLabel}>Notification Sound</Text>
+      <Text style={styles.soundLabel}>{t('giftNotificationSound')}</Text>
       <View style={styles.soundOptionsContainer}>
         <TouchableOpacity
           style={[
@@ -181,7 +215,7 @@ const SoundSelector = ({ selectedSound, onSoundChange, styles }) => {
             styles.soundOptionText,
             selectedSound === 'default' && styles.soundOptionTextActive,
           ]}>
-            Default
+            {t('default')}
           </Text>
         </TouchableOpacity>
         
@@ -195,7 +229,7 @@ const SoundSelector = ({ selectedSound, onSoundChange, styles }) => {
             color="#B383FF" 
           />
           <Text style={styles.customSoundOptionText}>
-            Custom Ringtone
+            {t('customRingtone')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -203,18 +237,18 @@ const SoundSelector = ({ selectedSound, onSoundChange, styles }) => {
   );
 };
 
-const SecuritySection = ({ onDeviceManagement, onClearData, styles }) => {
+const SecuritySection = ({ onDeviceManagement, onClearData, styles, t }) => {
   return (
     <View style={styles.securityContainer}>
       <View style={styles.sectionHeader}>
         <Ionicons name="shield-checkmark" size={20} color="#B383FF" style={styles.sectionIcon} />
-        <Text style={styles.sectionTitle}>Security & Privacy</Text>
+        <Text style={styles.sectionTitle}>{t('securityPrivacy')}</Text>
       </View>
       
       <TouchableOpacity style={styles.securityOption} onPress={onDeviceManagement}>
         <View style={styles.securityOptionContent}>
           <Ionicons name="phone-portrait" size={18} color="#C5AFFF" />
-          <Text style={styles.securityOptionText}>Device Registration</Text>
+          <Text style={styles.securityOptionText}>{t('deviceRegistration')}</Text>
         </View>
         <Ionicons name="chevron-forward" size={16} color="#9090A0" />
       </TouchableOpacity>
@@ -222,7 +256,7 @@ const SecuritySection = ({ onDeviceManagement, onClearData, styles }) => {
       <TouchableOpacity style={styles.securityOption} onPress={onClearData}>
         <View style={styles.securityOptionContent}>
           <Ionicons name="trash" size={18} color="#FF6B6B" />
-          <Text style={[styles.securityOptionText, { color: '#FF6B6B' }]}>Clear All Data</Text>
+          <Text style={[styles.securityOptionText, { color: '#FF6B6B' }]}>{t('clearAllData')}</Text>
         </View>
         <Ionicons name="chevron-forward" size={16} color="#9090A0" />
       </TouchableOpacity>
@@ -231,6 +265,7 @@ const SecuritySection = ({ onDeviceManagement, onClearData, styles }) => {
 };
 
 export default function Settings({ visible, onClose, onSettingsChange, currentSettings }) {
+  const { t, currentLanguage, changeLanguage } = useLanguage();
   const [settings, setSettings] = useState({
     vibration: true,
     darkMode: true,
@@ -302,23 +337,23 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
       const parsedDevices = JSON.parse(registeredDevices);
       
       Alert.alert(
-        '🔐 Device Management',
-        `Current Device: ${Device.modelName || 'Unknown'}\nRegistered Devices: ${parsedDevices.length}\n\nWould you like to:`,
+        t('deviceManagement'),
+        `${t('currentDevice', { device: Device.modelName || 'Unknown' })}\n${t('registeredDevices', { count: parsedDevices.length })}\n\n${t('deviceManagementOptions')}`,
         [
-          { text: 'Cancel', style: 'cancel' },
+          { text: t('cancel'), style: 'cancel' },
           { 
-            text: 'View Devices', 
+            text: t('viewDevices'), 
             onPress: () => {
               Alert.alert(
-                'Registered Devices',
+                t('registeredDevicesTitle'),
                 parsedDevices.length > 0 
                   ? parsedDevices.map((device, index) => `${index + 1}. ${device.name || 'Unknown Device'}`).join('\n')
-                  : 'No devices registered yet.'
+                  : t('noDevicesRegistered')
               );
             }
           },
           {
-            text: 'Register This Device',
+            text: t('registerDevice'),
             onPress: async () => {
               try {
                 const newDevice = {
@@ -328,27 +363,27 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
                 };
                 const updatedDevices = [...parsedDevices, newDevice];
                 await AsyncStorage.setItem('registered_devices', JSON.stringify(updatedDevices));
-                Alert.alert('✅ Success', 'Device registered successfully!');
+                Alert.alert(t('deviceRegistrationSuccess'), t('deviceRegistered'));
               } catch (error) {
-                Alert.alert('❌ Error', 'Failed to register device.');
+                Alert.alert(t('deviceRegistrationError'), t('deviceRegistrationFailed'));
               }
             }
           }
         ]
       );
     } catch (error) {
-      Alert.alert('❌ Error', 'Failed to access device management.');
+      Alert.alert(t('deviceRegistrationError'), t('deviceManagementError'));
     }
   };
 
   const handleClearData = () => {
     Alert.alert(
-      '🗑️ Clear All Data',
-      'This will reset the app to its default state:\n\n• All cached notifications will be removed\n• App settings will be reset to defaults\n• Device registration will be cleared\n\nThis action cannot be undone.',
+      t('clearDataTitle'),
+      t('clearDataMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         { 
-          text: 'Reset App', 
+          text: t('resetApp'), 
           style: 'destructive',
           onPress: async () => {
             try {
@@ -368,11 +403,11 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
               setSettings(defaultSettings);
               
               Alert.alert(
-                '✅ App Reset Complete', 
-                'The app has been reset to its default state successfully.',
+                t('appResetComplete'), 
+                t('appResetSuccess'),
                 [
                   {
-                    text: 'OK',
+                    text: t('ok'),
                     onPress: () => {
                       // Close settings modal and refresh the app
                       onClose();
@@ -384,7 +419,7 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
                 ]
               );
             } catch (error) {
-              Alert.alert('❌ Error', 'Failed to reset app data. Please try again.');
+              Alert.alert(t('appResetError'), t('appResetFailed'));
               console.error('Clear data error:', error);
             }
           }
@@ -415,7 +450,7 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
             <View style={styles.headerContent}>
               <View style={styles.headerTitleContainer}>
                 <Ionicons name="settings" size={24} color="#B383FF" style={styles.headerIcon} />
-                <Text style={styles.headerTitle}>Settings</Text>
+                <Text style={styles.headerTitle}>{t('settings')}</Text>
               </View>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                 <Ionicons name="close" size={24} color={settings.darkMode ? "#FFFFFF" : "#1A1A1A"} />
@@ -429,12 +464,12 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Ionicons name="notifications" size={20} color="#B383FF" style={styles.sectionIcon} />
-                <Text style={styles.sectionTitle}>Notifications</Text>
+                <Text style={styles.sectionTitle}>{t('notifications')}</Text>
               </View>
 
               <SettingToggle
-                title="Vibration"
-                description="Vibrate when gift notifications arrive"
+                title={t('vibration')}
+                description={t('vibrationDesc')}
                 isEnabled={settings.vibration}
                 onToggle={() => updateSetting('vibration', !settings.vibration)}
                 iconName={settings.vibration ? "phone-portrait" : "phone-portrait-outline"}
@@ -449,15 +484,16 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
                   <View style={styles.settingInfo}>
                     <View style={styles.settingTitleRow}>
                       <Ionicons name="volume-high" size={20} color="#B383FF" style={styles.settingIcon} />
-                      <Text style={styles.settingTitle}>Gift Notification Sound</Text>
+                      <Text style={styles.settingTitle}>{t('giftNotificationSound')}</Text>
                     </View>
-                    <Text style={styles.settingDescription}>Choose notification sound for gift alerts</Text>
+                    <Text style={styles.settingDescription}>{t('giftNotificationSoundDesc')}</Text>
                   </View>
                 </View>
                 <SoundSelector 
                   selectedSound={settings.notificationSound}
                   onSoundChange={(sound) => updateSetting('notificationSound', sound)}
                   styles={styles}
+                  t={t}
                 />
               </View>
             </View>
@@ -466,12 +502,12 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Ionicons name="color-palette" size={20} color="#B383FF" style={styles.sectionIcon} />
-                <Text style={styles.sectionTitle}>Appearance</Text>
+                <Text style={styles.sectionTitle}>{t('appearance')}</Text>
               </View>
 
               <SettingToggle
-                title="Dark Mode"
-                description="Use dark theme throughout the app"
+                title={t('darkMode')}
+                description={t('darkModeDesc')}
                 isEnabled={settings.darkMode}
                 onToggle={() => updateSetting('darkMode', !settings.darkMode)}
                 iconName={settings.darkMode ? "moon" : "sunny"}
@@ -482,8 +518,8 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
               />
 
               <SettingToggle
-                title="Animations"
-                description="Enable smooth animations and transitions"
+                title={t('animations')}
+                description={t('animationsDesc')}
                 isEnabled={settings.animations}
                 onToggle={() => updateSetting('animations', !settings.animations)}
                 iconName={settings.animations ? "play-circle" : "pause-circle"}
@@ -498,6 +534,16 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
                   value={settings.fontSize}
                   onValueChange={(value) => updateSetting('fontSize', value)}
                   styles={styles}
+                  t={t}
+                />
+              </View>
+
+              <View style={styles.languageContainer}>
+                <LanguageSelector 
+                  selectedLanguage={currentLanguage}
+                  onLanguageChange={changeLanguage}
+                  styles={styles}
+                  t={t}
                 />
               </View>
             </View>
@@ -507,28 +553,29 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
               onDeviceManagement={handleDeviceManagement}
               onClearData={handleClearData}
               styles={styles}
+              t={t}
             />
 
             {/* App Info */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Ionicons name="information-circle" size={20} color="#B383FF" style={styles.sectionIcon} />
-                <Text style={styles.sectionTitle}>About</Text>
+                <Text style={styles.sectionTitle}>{t('about')}</Text>
               </View>
               <View style={styles.infoContainer}>
-                <Text style={styles.infoText}>Prototype-G v1.0.0</Text>
-                <Text style={styles.infoSubtext}>Gift Detection & Alert System</Text>
+                <Text style={styles.infoText}>{t('appVersion')}</Text>
+                <Text style={styles.infoSubtext}>{t('appDescription')}</Text>
                 <View style={styles.telegramChannelContainer}>
                   <Ionicons name="paper-plane" size={16} color="#B383FF" style={styles.telegramIcon} />
-                  <Text style={styles.telegramChannelText}>Our Official Telegram Channel </Text>
+                  <Text style={styles.telegramChannelText}>{t('telegramChannel')}</Text>
                   <TouchableOpacity 
                     onPress={() => Linking.openURL('https://t.me/PrototypeGifts')}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.telegramChannelLink}>@PrototypeGifts</Text>
+                    <Text style={styles.telegramChannelLink}>{t('telegramChannelLink')}</Text>
                   </TouchableOpacity>
                 </View>
-                <Text style={styles.infoSubtext}>Made with JavaScript And Hope</Text>
+                <Text style={styles.infoSubtext}>{t('madeWith')}</Text>
               </View>
             </View>
           </ScrollView>
@@ -847,5 +894,52 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
     color: '#B383FF',
     fontWeight: '600',
     textDecorationLine: 'underline',
+  },
+  languageContainer: {
+    backgroundColor: settingsTheme.darkMode ? 'rgba(30, 20, 50, 0.6)' : 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: settingsTheme.darkMode ? 'rgba(197, 175, 255, 0.1)' : 'rgba(179, 131, 255, 0.2)',
+  },
+  languageLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: settingsTheme.darkMode ? '#FFFFFF' : '#1A1A1A',
+    marginBottom: 12,
+  },
+  languageOptionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  languageOption: {
+    backgroundColor: settingsTheme.darkMode ? 'rgba(60, 60, 70, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 120,
+    borderWidth: 1,
+    borderColor: settingsTheme.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(179, 131, 255, 0.4)',
+    flex: 1,
+  },
+  languageOptionActive: {
+    backgroundColor: 'rgba(179, 131, 255, 0.8)',
+    borderColor: '#B383FF',
+  },
+  languageFlag: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  languageOptionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#B383FF',
+    textAlign: 'center',
+  },
+  languageOptionTextActive: {
+    color: '#FFFFFF',
   },
 });
