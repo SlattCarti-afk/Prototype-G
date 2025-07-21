@@ -382,9 +382,6 @@ export default function App() {
     fontSize: 1,
     notificationSound: 'default',
   });
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const themeTransitionAnim = useRef(new Animated.Value(0)).current;
-  const settingsButtonRef = useRef(null);
 
   useEffect(() => {
     // Load settings first
@@ -805,27 +802,6 @@ export default function App() {
   };
 
   const handleSettingsChange = (newSettings) => {
-    // Check if dark mode is changing
-    if (newSettings.darkMode !== settings.darkMode && settings.animations) {
-      setIsTransitioning(true);
-      
-      // Animate the theme transition
-      Animated.sequence([
-        Animated.timing(themeTransitionAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: false,
-        }),
-        Animated.timing(themeTransitionAnim, {
-          toValue: 0,
-          duration: 100,
-          useNativeDriver: false,
-        }),
-      ]).start(() => {
-        setIsTransitioning(false);
-      });
-    }
-    
     setSettings(newSettings);
     // Apply vibration setting immediately
     if (newSettings.vibration !== settings.vibration) {
@@ -1084,25 +1060,6 @@ wait for new gift opportunities to be detected!
           onSettingsChange={handleSettingsChange}
           currentSettings={settings}
         />
-        
-        {/* Theme Transition Overlay */}
-        {isTransitioning && (
-          <Animated.View
-            style={[
-              styles.themeTransitionOverlay,
-              {
-                transform: [{
-                  scale: themeTransitionAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 3],
-                  })
-                }],
-                backgroundColor: settings.darkMode ? '#0B0B14' : '#F8F9FA',
-              }
-            ]}
-            pointerEvents="none"
-          />
-        )}
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -1633,14 +1590,5 @@ const getStyles = (settings) => StyleSheet.create({
     fontWeight: '500',
     letterSpacing: 0.2,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-  },
-  themeTransitionOverlay: {
-    position: 'absolute',
-    top: '50%',
-    right: 80, // Position near settings button
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    zIndex: 9999,
   },
 });

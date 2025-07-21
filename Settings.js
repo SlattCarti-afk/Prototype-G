@@ -6,11 +6,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Device from 'expo-device';
 
-const AnimatedIcon = ({ name, color, size, isEnabled, style, animationsEnabled = true }) => {
+const AnimatedIcon = ({ name, color, size, isEnabled, style, animationsEnabled = true, settingKey, lastChangedSetting }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    if (animationsEnabled) {
+    // Only animate if this specific setting was the one that changed
+    if (animationsEnabled && lastChangedSetting === settingKey) {
       Animated.sequence([
         Animated.timing(scaleAnim, {
           toValue: 1.1,
@@ -24,7 +25,7 @@ const AnimatedIcon = ({ name, color, size, isEnabled, style, animationsEnabled =
         }),
       ]).start();
     }
-  }, [isEnabled, animationsEnabled]);
+  }, [lastChangedSetting, animationsEnabled, settingKey]);
 
   return (
     <Animated.View style={[style, { transform: animationsEnabled ? [{ scale: scaleAnim }] : [] }]}>
@@ -33,7 +34,7 @@ const AnimatedIcon = ({ name, color, size, isEnabled, style, animationsEnabled =
   );
 };
 
-const SettingToggle = ({ title, description, isEnabled, onToggle, iconName, children, animationsEnabled = true, styles }) => {
+const SettingToggle = ({ title, description, isEnabled, onToggle, iconName, children, animationsEnabled = true, styles, settingKey, lastChangedSetting }) => {
   const slideAnim = useRef(new Animated.Value(isEnabled ? 1 : 0)).current;
   const backgroundColorAnim = useRef(new Animated.Value(isEnabled ? 1 : 0)).current;
 
@@ -84,6 +85,8 @@ const SettingToggle = ({ title, description, isEnabled, onToggle, iconName, chil
               isEnabled={isEnabled}
               style={styles.settingIcon}
               animationsEnabled={animationsEnabled}
+              settingKey={settingKey}
+              lastChangedSetting={lastChangedSetting}
             />
             <Text style={styles.settingTitle}>{title}</Text>
           </View>
@@ -235,6 +238,7 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
     fontSize: 1, // 0=small, 1=medium, 2=large, 3=xl
     notificationSound: 'default',
   });
+  const [lastChangedSetting, setLastChangedSetting] = useState(null);
 
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -280,15 +284,14 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
 
   const updateSetting = (key, value) => {
     const newSettings = { ...settings, [key]: value };
+    setLastChangedSetting(key);
     
-    // Add a small delay for dark mode toggle to show visual feedback
-    if (key === 'darkMode' && settings.animations) {
-      setTimeout(() => {
-        saveSettings(newSettings);
-      }, 100);
-    } else {
-      saveSettings(newSettings);
-    }
+    // Clear the lastChangedSetting after animation completes
+    setTimeout(() => {
+      setLastChangedSetting(null);
+    }, 300);
+    
+    saveSettings(newSettings);
   };
 
   const handleDeviceManagement = async () => {
@@ -437,6 +440,8 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
                 iconName={settings.vibration ? "phone-portrait" : "phone-portrait-outline"}
                 animationsEnabled={settings.animations}
                 styles={styles}
+                settingKey="vibration"
+                lastChangedSetting={lastChangedSetting}
               />
 
               <View style={styles.settingContainer}>
@@ -472,6 +477,8 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
                 iconName={settings.darkMode ? "moon" : "sunny"}
                 animationsEnabled={settings.animations}
                 styles={styles}
+                settingKey="darkMode"
+                lastChangedSetting={lastChangedSetting}
               />
 
               <SettingToggle
@@ -482,6 +489,8 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
                 iconName={settings.animations ? "play-circle" : "pause-circle"}
                 animationsEnabled={settings.animations}
                 styles={styles}
+                settingKey="animations"
+                lastChangedSetting={lastChangedSetting}
               />
 
               <View style={styles.fontSizeContainer}>
