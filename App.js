@@ -158,14 +158,23 @@ export default function App() {
         const cached = window.localStorage.getItem('tgift_notifications');
         if (cached) {
           const parsedNotifications = JSON.parse(cached);
+          
+          // Filter to only show NEWS notifications (not test notifications)
+          const newsOnlyNotifications = parsedNotifications.filter(notification => 
+            notification.message && (
+              notification.message.toLowerCase().includes('news') ||
+              notification.headline && notification.headline.toLowerCase().includes('news')
+            ) && !notification.headline?.includes('🧪 Test')
+          );
+          
           // Remove duplicates when loading
-          const uniqueNotifications = parsedNotifications.filter((notification, index, self) =>
+          const uniqueNotifications = newsOnlyNotifications.filter((notification, index, self) =>
             index === self.findIndex((n) => 
               n.timestamp === notification.timestamp && 
               n.message === notification.message
             )
           );
-          console.log('Loaded cached notifications:', uniqueNotifications.length);
+          console.log('Loaded cached NEWS notifications:', uniqueNotifications.length);
           setNotifications(uniqueNotifications);
           return uniqueNotifications;
         }
@@ -225,27 +234,39 @@ export default function App() {
       if (response.ok) {
         const data = await response.json();
         if (data.notifications && data.notifications.length > 0) {
-          // Get current notifications (either from state or cache)
-          const currentNotifications = notifications.length > 0 ? notifications : loadCachedNotifications();
-          
-          // Merge new notifications with existing ones
-          const allNotifications = [...currentNotifications, ...data.notifications];
-          
-          // Remove duplicates based on timestamp, message content, and headline
-          const uniqueNotifications = allNotifications.filter((notification, index, self) =>
-            index === self.findIndex((n) => 
-              n.timestamp === notification.timestamp && 
-              n.message === notification.message &&
-              n.headline === notification.headline
+          // Filter to only show NEWS notifications from backend
+          const newsNotifications = data.notifications.filter(notification => 
+            notification.message && (
+              notification.message.toLowerCase().includes('news') ||
+              notification.headline && notification.headline.toLowerCase().includes('news')
             )
           );
           
-          // Sort by timestamp (newest first)
-          uniqueNotifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-          
-          console.log('Fetched notifications:', data.notifications.length, 'Total unique:', uniqueNotifications.length);
-          setNotifications(uniqueNotifications);
-          cacheNotifications(uniqueNotifications);
+          if (newsNotifications.length > 0) {
+            // Get current notifications (either from state or cache)
+            const currentNotifications = notifications.length > 0 ? notifications : loadCachedNotifications();
+            
+            // Merge new news notifications with existing ones
+            const allNotifications = [...currentNotifications, ...newsNotifications];
+            
+            // Remove duplicates based on timestamp, message content, and headline
+            const uniqueNotifications = allNotifications.filter((notification, index, self) =>
+              index === self.findIndex((n) => 
+                n.timestamp === notification.timestamp && 
+                n.message === notification.message &&
+                n.headline === notification.headline
+              )
+            );
+            
+            // Sort by timestamp (newest first)
+            uniqueNotifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            console.log('Fetched NEWS notifications:', newsNotifications.length, 'Total unique:', uniqueNotifications.length);
+            setNotifications(uniqueNotifications);
+            cacheNotifications(uniqueNotifications);
+          } else {
+            console.log('No NEWS notifications from server');
+          }
         } else {
           // No new notifications from server, keep existing cached ones
           console.log('No new notifications from server');
@@ -324,16 +345,9 @@ export default function App() {
         await playNotificationSound();
         Alert.alert('✅ Success', 'Test notification sent to backend! You should receive a push notification shortly.');
 
-        // Add the test notification to local state immediately
-        const newTestNotification = {
-          ...testData,
-          timestamp: new Date().toISOString()
-        };
+        // Don't add test notifications to the Recent Gift News section
+        // That section is only for NEWS notifications from the backend
         
-        const updatedNotifications = [newTestNotification, ...notifications];
-        setNotifications(updatedNotifications);
-        cacheNotifications(updatedNotifications);
-
         setTimeout(() => {
           checkBackendStatus();
           fetchNotifications();
