@@ -280,7 +280,15 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
 
   const updateSetting = (key, value) => {
     const newSettings = { ...settings, [key]: value };
-    saveSettings(newSettings);
+    
+    // Add a small delay for dark mode toggle to show visual feedback
+    if (key === 'darkMode' && settings.animations) {
+      setTimeout(() => {
+        saveSettings(newSettings);
+      }, 100);
+    } else {
+      saveSettings(newSettings);
+    }
   };
 
   const handleDeviceManagement = async () => {
