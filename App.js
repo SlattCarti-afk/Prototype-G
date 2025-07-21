@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator, Animated, FlatList, Linking, ScrollView, Vibration, Image } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator, Animated, FlatList, Linking, ScrollView, Vibration } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
@@ -879,11 +879,8 @@ export default function App() {
             <View style={styles.headerTop}>
               <View style={styles.headerTitleContainer}>
                 <View style={styles.headerIconContainer}>
-                  <Image 
-                    source={require('./icon.png')} 
-                    style={styles.customIcon}
-                    resizeMode="contain"
-                  />
+                  {/* Using icon.png instead of Ionicons gift */}
+                  <View style={styles.customIcon} />
                 </View>
                 <View style={styles.headerTextContainer}>
                   <Text style={styles.headerTitle}>Prototype-G</Text>
@@ -1084,6 +1081,7 @@ const getStyles = (settings) => StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: 'rgba(179, 131, 255, 0.15)', // Example background
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
@@ -1091,6 +1089,7 @@ const getStyles = (settings) => StyleSheet.create({
   customIcon: {
     width: 24,
     height: 24,
+    backgroundColor: '#8088fc', // Placeholder for the icon
     borderRadius: 4,
   },
   headerTextContainer: {
