@@ -621,11 +621,16 @@ export default function App() {
         console.log('Using device custom notification sound');
       } else {
         // Play default app sound
-        const { sound } = await Audio.Sound.createAsync(
-          require('./Sound.ogg'),
-          { shouldPlay: true, volume: 0.8 }
-        );
-        setSound(sound);
+        try {
+          const { sound } = await Audio.Sound.createAsync(
+            require('./LongSound.ogg'),
+            { shouldPlay: true, volume: 0.8 }
+          );
+          setSound(sound);
+        } catch (soundError) {
+          console.log('Failed to load sound file, using system notification sound');
+          // Fallback to system notification sound if file loading fails
+        }
 
         setTimeout(async () => {
           if (sound) {

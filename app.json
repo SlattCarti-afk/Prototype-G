@@ -15,6 +15,9 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "expo": {
+      "assetFileExtensions": ["ogg", "mp3", "wav", "m4a"]
+    },
     "ios": {
       "supportsTablet": true
     },
