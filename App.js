@@ -47,6 +47,7 @@ const HeartbeatDot = ({ isConnected }) => {
       // Stop any current animation when connection state changes
       if (animationRef.current) {
         animationRef.current.stop();
+        animationRef.current = null;
       }
       
       if (!isConnected && previousConnection) {
@@ -57,14 +58,20 @@ const HeartbeatDot = ({ isConnected }) => {
         setAnimationState('reviving');
       }
       setPreviousConnection(isConnected);
-    } else if (!isConnected && animationState === 'normal') {
-      // If we're offline and somehow in normal state, go to dead
+    }
+  }, [isConnected, previousConnection]);
+
+  // Separate effect to handle offline state enforcement
+  useEffect(() => {
+    if (!isConnected && (animationState === 'normal' || animationState === 'reviving')) {
+      // If we're offline and in normal/reviving state, stop and go to dead
       if (animationRef.current) {
         animationRef.current.stop();
+        animationRef.current = null;
       }
       setAnimationState('dead');
     }
-  }, [isConnected, previousConnection, animationState]);
+  }, [isConnected, animationState]);
 
   // Color transition animation
   useEffect(() => {
@@ -77,13 +84,16 @@ const HeartbeatDot = ({ isConnected }) => {
 
   // Main heartbeat animation logic
   useEffect(() => {
+    // Clean up any existing animation
     if (animationRef.current) {
       animationRef.current.stop();
+      animationRef.current = null;
     }
 
     const normalHeartbeat = () => {
-      // Only continue heartbeat if we're connected and in normal state
+      // Double check we're still connected and in normal state
       if (!isConnected || animationState !== 'normal') {
+        console.log('Stopping normal heartbeat - not connected or wrong state');
         return;
       }
       
@@ -113,9 +123,13 @@ const HeartbeatDot = ({ isConnected }) => {
       
       animationRef.current = sequence;
       sequence.start((finished) => {
+        // Clear the ref when animation completes
+        animationRef.current = null;
         // Only continue if animation completed naturally and conditions are still met
         if (finished && animationState === 'normal' && isConnected) {
           normalHeartbeat();
+        } else {
+          console.log('Normal heartbeat stopped - finished:', finished, 'state:', animationState, 'connected:', isConnected);
         }
       });
     };
@@ -174,8 +188,11 @@ const HeartbeatDot = ({ isConnected }) => {
       
       animationRef.current = sequence;
       sequence.start((finished) => {
+        // Clear the ref when animation completes
+        animationRef.current = null;
         // Only set to dead if animation completed naturally
         if (finished) {
+          console.log('Dying animation completed, setting to dead');
           setAnimationState('dead');
         }
       });
@@ -224,8 +241,11 @@ const HeartbeatDot = ({ isConnected }) => {
       
       animationRef.current = sequence;
       sequence.start((finished) => {
+        // Clear the ref when animation completes
+        animationRef.current = null;
         // Only set to normal if animation completed naturally and still connected
         if (finished && isConnected) {
+          console.log('Reviving animation completed, setting to normal');
           setAnimationState('normal');
         }
       });
@@ -235,19 +255,24 @@ const HeartbeatDot = ({ isConnected }) => {
       case 'normal':
         // Only start normal heartbeat if connected
         if (isConnected) {
+          console.log('Starting normal heartbeat');
           normalHeartbeat();
         } else {
+          console.log('Not connected, setting to dead instead of normal');
           setAnimationState('dead');
         }
         break;
       case 'dying':
+        console.log('Starting dying animation');
         dyingAnimation();
         break;
       case 'reviving':
+        console.log('Starting reviving animation');
         revivingAnimation();
         break;
       case 'dead':
         // No animation when dead - stay still
+        console.log('Animation state: dead - no movement');
         heartbeatAnim.setValue(1);
         break;
     }
@@ -255,9 +280,10 @@ const HeartbeatDot = ({ isConnected }) => {
     return () => {
       if (animationRef.current) {
         animationRef.current.stop();
+        animationRef.current = null;
       }
     };
-  }, [animationState]);
+  }, [animationState, isConnected]);
 
   // Interpolate colors based on connection state
   const backgroundColor = colorAnim.interpolate({
