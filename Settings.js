@@ -227,7 +227,7 @@ const SecuritySection = ({ onDeviceManagement, onClearData }) => {
   );
 };
 
-function Settings({ visible, onClose, onSettingsChange, currentSettings, styles }) {
+function Settings({ visible, onClose, onSettingsChange, currentSettings }) {
   const [settings, setSettings] = useState({
     vibration: true,
     darkMode: true,
@@ -383,6 +383,8 @@ function Settings({ visible, onClose, onSettingsChange, currentSettings, styles 
 
   if (!visible) return null;
 
+  const styles = getSettingsStyles(settings);
+
   return (
     <View style={styles.overlay}>
       <TouchableOpacity style={styles.backdrop} onPress={onClose} activeOpacity={1} />
@@ -399,7 +401,7 @@ function Settings({ visible, onClose, onSettingsChange, currentSettings, styles 
                 <Text style={styles.headerTitle}>Settings</Text>
               </View>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                <Ionicons name="close" size={24} color="#FFFFFF" />
+                <Ionicons name="close" size={24} color={settings.darkMode ? "#FFFFFF" : "#1A1A1A"} />
               </TouchableOpacity>
             </View>
           </View>
@@ -563,7 +565,7 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
   closeButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: 'rgba(197, 175, 255, 0.1)',
+    backgroundColor: settingsTheme.darkMode ? 'rgba(197, 175, 255, 0.1)' : 'rgba(179, 131, 255, 0.2)',
   },
   content: {
     flex: 1,
@@ -648,7 +650,7 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
   sliderLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: settingsTheme.darkMode ? '#FFFFFF' : '#1A1A1A',
     marginBottom: 12,
   },
   sliderTrack: {
@@ -683,7 +685,7 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
   soundLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: settingsTheme.darkMode ? '#FFFFFF' : '#1A1A1A',
     marginBottom: 12,
   },
   soundOptionsContainer: {
@@ -692,26 +694,26 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
     alignItems: 'center',
   },
   soundOption: {
-    backgroundColor: 'rgba(60, 60, 70, 0.8)',
+    backgroundColor: settingsTheme.darkMode ? 'rgba(60, 60, 70, 0.8)' : 'rgba(255, 255, 255, 0.9)',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 100,
     borderWidth: 1,
-    borderColor: 'rgba(197, 175, 255, 0.2)',
+    borderColor: settingsTheme.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(179, 131, 255, 0.4)',
     flex: 1,
     marginRight: 8,
   },
   customSoundOption: {
-    backgroundColor: 'rgba(60, 60, 70, 0.8)',
+    backgroundColor: settingsTheme.darkMode ? 'rgba(60, 60, 70, 0.8)' : 'rgba(255, 255, 255, 0.9)',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 100,
     borderWidth: 1,
-    borderColor: 'rgba(197, 175, 255, 0.2)',
+    borderColor: settingsTheme.darkMode ? 'rgba(197, 175, 255, 0.2)' : 'rgba(179, 131, 255, 0.4)',
     flex: 1,
     marginLeft: 8,
   },
@@ -745,12 +747,12 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
     borderColor: 'rgba(197, 175, 255, 0.1)',
   },
   securityContainer: {
-    backgroundColor: 'rgba(30, 20, 50, 0.6)',
+    backgroundColor: settingsTheme.darkMode ? 'rgba(30, 20, 50, 0.6)' : 'rgba(255, 255, 255, 0.8)',
     borderRadius: 16,
     padding: 20,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(197, 175, 255, 0.1)',
+    borderColor: settingsTheme.darkMode ? 'rgba(197, 175, 255, 0.1)' : 'rgba(179, 131, 255, 0.2)',
   },
   securityOption: {
     flexDirection: 'row',
@@ -767,26 +769,26 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
   securityOptionText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: settingsTheme.darkMode ? '#FFFFFF' : '#1A1A1A',
     marginLeft: 12,
   },
   infoContainer: {
-    backgroundColor: 'rgba(30, 20, 50, 0.6)',
+    backgroundColor: settingsTheme.darkMode ? 'rgba(30, 20, 50, 0.6)' : 'rgba(255, 255, 255, 0.8)',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(197, 175, 255, 0.1)',
+    borderColor: settingsTheme.darkMode ? 'rgba(197, 175, 255, 0.1)' : 'rgba(179, 131, 255, 0.2)',
   },
   infoText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: settingsTheme.darkMode ? '#FFFFFF' : '#1A1A1A',
     marginBottom: 4,
   },
   infoSubtext: {
     fontSize: 14,
-    color: '#B0B0C0',
+    color: settingsTheme.darkMode ? '#B0B0C0' : '#495057',
     marginBottom: 2,
   },
   telegramChannelButton: {
@@ -811,31 +813,4 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
   },
 });
 
-export default function SettingsWrapper(props) {
-  const [settings, setSettings] = useState({
-    vibration: true,
-    darkMode: true,
-    animations: true,
-    fontSize: 1,
-    notificationSound: 'default',
-  });
-
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const savedSettings = await AsyncStorage.getItem('tgift_settings');
-        if (savedSettings) {
-          const parsed = JSON.parse(savedSettings);
-          setSettings(prev => ({ ...prev, ...parsed }));
-        }
-      } catch (error) {
-        console.log('Failed to load settings:', error);
-      }
-    };
-    loadSettings();
-  }, []);
-
-  const styles = getSettingsStyles(settings);
-  
-  return <Settings {...props} currentSettings={settings} styles={styles} />;
-}
+export default Settings;
