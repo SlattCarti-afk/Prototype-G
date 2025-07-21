@@ -33,7 +33,7 @@ const AnimatedIcon = ({ name, color, size, isEnabled, style, animationsEnabled =
   );
 };
 
-const SettingToggle = ({ title, description, isEnabled, onToggle, iconName, children, animationsEnabled = true }) => {
+const SettingToggle = ({ title, description, isEnabled, onToggle, iconName, children, animationsEnabled = true, styles }) => {
   const slideAnim = useRef(new Animated.Value(isEnabled ? 1 : 0)).current;
   const backgroundColorAnim = useRef(new Animated.Value(isEnabled ? 1 : 0)).current;
 
@@ -112,7 +112,7 @@ const SettingToggle = ({ title, description, isEnabled, onToggle, iconName, chil
   );
 };
 
-const FontSizeSlider = ({ value, onValueChange }) => {
+const FontSizeSlider = ({ value, onValueChange, styles }) => {
   const sizes = ['Small', 'Medium', 'Large', 'Extra Large'];
   const sizeValues = [12, 16, 20, 24];
 
@@ -143,7 +143,7 @@ const FontSizeSlider = ({ value, onValueChange }) => {
   );
 };
 
-const SoundSelector = ({ selectedSound, onSoundChange }) => {
+const SoundSelector = ({ selectedSound, onSoundChange, styles }) => {
   const handleCustomSoundSelection = () => {
     Alert.alert(
       '🎵 Custom Ringtone',
@@ -200,7 +200,7 @@ const SoundSelector = ({ selectedSound, onSoundChange }) => {
   );
 };
 
-const SecuritySection = ({ onDeviceManagement, onClearData }) => {
+const SecuritySection = ({ onDeviceManagement, onClearData, styles }) => {
   return (
     <View style={styles.securityContainer}>
       <View style={styles.sectionHeader}>
@@ -227,7 +227,7 @@ const SecuritySection = ({ onDeviceManagement, onClearData }) => {
   );
 };
 
-function Settings({ visible, onClose, onSettingsChange, currentSettings }) {
+export default function Settings({ visible, onClose, onSettingsChange, currentSettings }) {
   const [settings, setSettings] = useState({
     vibration: true,
     darkMode: true,
@@ -241,6 +241,12 @@ function Settings({ visible, onClose, onSettingsChange, currentSettings }) {
   useEffect(() => {
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    if (currentSettings) {
+      setSettings(prev => ({ ...prev, ...currentSettings }));
+    }
+  }, [currentSettings]);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -422,6 +428,7 @@ function Settings({ visible, onClose, onSettingsChange, currentSettings }) {
                 onToggle={() => updateSetting('vibration', !settings.vibration)}
                 iconName={settings.vibration ? "phone-portrait" : "phone-portrait-outline"}
                 animationsEnabled={settings.animations}
+                styles={styles}
               />
 
               <View style={styles.settingContainer}>
@@ -437,6 +444,7 @@ function Settings({ visible, onClose, onSettingsChange, currentSettings }) {
                 <SoundSelector 
                   selectedSound={settings.notificationSound}
                   onSoundChange={(sound) => updateSetting('notificationSound', sound)}
+                  styles={styles}
                 />
               </View>
             </View>
@@ -455,6 +463,7 @@ function Settings({ visible, onClose, onSettingsChange, currentSettings }) {
                 onToggle={() => updateSetting('darkMode', !settings.darkMode)}
                 iconName={settings.darkMode ? "moon" : "sunny"}
                 animationsEnabled={settings.animations}
+                styles={styles}
               />
 
               <SettingToggle
@@ -464,12 +473,14 @@ function Settings({ visible, onClose, onSettingsChange, currentSettings }) {
                 onToggle={() => updateSetting('animations', !settings.animations)}
                 iconName={settings.animations ? "play-circle" : "pause-circle"}
                 animationsEnabled={settings.animations}
+                styles={styles}
               />
 
               <View style={styles.fontSizeContainer}>
                 <FontSizeSlider 
                   value={settings.fontSize}
                   onValueChange={(value) => updateSetting('fontSize', value)}
+                  styles={styles}
                 />
               </View>
             </View>
@@ -478,6 +489,7 @@ function Settings({ visible, onClose, onSettingsChange, currentSettings }) {
             <SecuritySection 
               onDeviceManagement={handleDeviceManagement}
               onClearData={handleClearData}
+              styles={styles}
             />
 
             {/* App Info */}
@@ -559,7 +571,7 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: settingsTheme.darkMode ? '#FFFFFF' : '#1A1A1A',
     letterSpacing: -0.5,
   },
   closeButton: {
@@ -739,12 +751,12 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
     color: '#FFFFFF',
   },
   fontSizeContainer: {
-    backgroundColor: 'rgba(30, 20, 50, 0.6)',
+    backgroundColor: settingsTheme.darkMode ? 'rgba(30, 20, 50, 0.6)' : 'rgba(255, 255, 255, 0.8)',
     borderRadius: 16,
     padding: 20,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(197, 175, 255, 0.1)',
+    borderColor: settingsTheme.darkMode ? 'rgba(197, 175, 255, 0.1)' : 'rgba(179, 131, 255, 0.2)',
   },
   securityContainer: {
     backgroundColor: settingsTheme.darkMode ? 'rgba(30, 20, 50, 0.6)' : 'rgba(255, 255, 255, 0.8)',
@@ -812,5 +824,3 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
     flex: 1,
   },
 });
-
-export default Settings;
