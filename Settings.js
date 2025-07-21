@@ -227,7 +227,7 @@ const SecuritySection = ({ onDeviceManagement, onClearData }) => {
   );
 };
 
-export default function Settings({ visible, onClose, onSettingsChange, currentSettings }) {
+function Settings({ visible, onClose, onSettingsChange, currentSettings, styles }) {
   const [settings, setSettings] = useState({
     vibration: true,
     darkMode: true,
@@ -504,8 +504,6 @@ export default function Settings({ visible, onClose, onSettingsChange, currentSe
     </View>
   );
 }
-
-const styles = getSettingsStyles(currentSettings || settings);
 
 const getSettingsStyles = (settingsTheme) => StyleSheet.create({
   overlay: {
@@ -811,4 +809,33 @@ const getSettingsStyles = (settingsTheme) => StyleSheet.create({
     fontWeight: '600',
     flex: 1,
   },
-});}
+});
+
+export default function SettingsWrapper(props) {
+  const [settings, setSettings] = useState({
+    vibration: true,
+    darkMode: true,
+    animations: true,
+    fontSize: 1,
+    notificationSound: 'default',
+  });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const savedSettings = await AsyncStorage.getItem('tgift_settings');
+        if (savedSettings) {
+          const parsed = JSON.parse(savedSettings);
+          setSettings(prev => ({ ...prev, ...parsed }));
+        }
+      } catch (error) {
+        console.log('Failed to load settings:', error);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  const styles = getSettingsStyles(settings);
+  
+  return <Settings {...props} currentSettings={settings} styles={styles} />;
+}
