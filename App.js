@@ -34,26 +34,41 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const PulsingDot = () => {
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+const HeartbeatDot = ({ isConnected }) => {
+  const heartbeatAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    const pulse = () => {
+    const heartbeat = () => {
       Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.3,
-          duration: 800,
+        Animated.timing(heartbeatAnim, {
+          toValue: 1.4,
+          duration: 150,
           useNativeDriver: true,
         }),
-        Animated.timing(pulseAnim, {
+        Animated.timing(heartbeatAnim, {
           toValue: 1,
-          duration: 800,
+          duration: 150,
           useNativeDriver: true,
         }),
-      ]).start(() => pulse());
+        Animated.timing(heartbeatAnim, {
+          toValue: 1.2,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartbeatAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.delay(800), // Pause between heartbeats
+      ]).start(() => heartbeat());
     };
-    pulse();
+    heartbeat();
   }, []);
+
+  const colors = isConnected 
+    ? ['#B383FF', '#C5AFFF', '#9B74FF']
+    : ['#FF6B6B', '#FF8E8E', '#FF4757'];
 
   return (
     <Animated.View
@@ -62,12 +77,12 @@ const PulsingDot = () => {
           width: 20,
           height: 20,
           borderRadius: 10,
-          transform: [{ scale: pulseAnim }],
+          transform: [{ scale: heartbeatAnim }],
         }
       ]}
     >
       <LinearGradient
-        colors={['#B383FF', '#C5AFFF', '#9B74FF']}
+        colors={colors}
         style={{
           width: 20,
           height: 20,
@@ -581,12 +596,15 @@ export default function App() {
                   </View>
                 </View>
                 <View style={styles.statusPulse}>
-                  <View style={[styles.pulseRing, isPolling && styles.pulsing]} />
-                  {isConnected ? (
-                    <PulsingDot />
-                  ) : (
-                    <View style={styles.pulseCoreOffline} />
-                  )}
+                  <View style={[
+                    styles.pulseRing, 
+                    isPolling && styles.pulsing,
+                    {
+                      borderColor: isConnected ? 'rgba(197, 175, 255, 0.4)' : 'rgba(255, 107, 107, 0.4)',
+                      shadowColor: isConnected ? '#C5AFFF' : '#FF6B6B'
+                    }
+                  ]} />
+                  <HeartbeatDot isConnected={isConnected} />
                 </View>
               </View>
 
@@ -902,9 +920,7 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 35,
     borderWidth: 2,
-    borderColor: 'rgba(197, 175, 255, 0.4)',
     opacity: 0.8,
-    shadowColor: '#C5AFFF',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
